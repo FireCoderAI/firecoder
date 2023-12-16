@@ -1,16 +1,23 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import { ChildProcessWithoutNullStreams, execFile, spawn } from "child_process";
+import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import * as vscode from "vscode";
+import { downloadServer, downloadModel } from "./download";
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 let myStatusBarItem: vscode.StatusBarItem;
 let server: ChildProcessWithoutNullStreams;
-export function activate(context: vscode.ExtensionContext) {
+
+export async function activate(context: vscode.ExtensionContext) {
   const fireCoderLog = vscode.window.createOutputChannel("FireCoder");
   fireCoderLog.append("FireCoder activated");
   fireCoderLog.show();
+
+  fireCoderLog.append(context.extensionPath);
+
+  await downloadServer(context.extensionPath);
+  await downloadModel(context.extensionPath);
 
   const config = vscode.workspace.getConfiguration("firecoder");
   const serverPath = config.get("serverPath") as string;
