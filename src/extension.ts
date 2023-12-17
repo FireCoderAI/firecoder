@@ -1,12 +1,8 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import * as vscode from "vscode";
-import { downloadServer, downloadModel, getCheckSum } from "./download";
+import { downloadServer, downloadModel } from "./download";
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
-let myStatusBarItem: vscode.StatusBarItem;
+let statusBarItemFireCoder: vscode.StatusBarItem;
 let server: ChildProcessWithoutNullStreams;
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -101,8 +97,8 @@ export async function activate(context: vscode.ExtensionContext) {
           controller.abort();
           controller = new AbortController();
         }
-        myStatusBarItem.text = `$(loading~spin) FireCoder`;
-        myStatusBarItem.show();
+        statusBarItemFireCoder.text = `$(loading~spin) FireCoder`;
+        statusBarItemFireCoder.show();
         const res = await fetch("http://localhost:39129/completion", {
           body: JSON.stringify(body),
           method: "POST",
@@ -134,8 +130,8 @@ export async function activate(context: vscode.ExtensionContext) {
         }
         fireCoderLog.append(JSON.stringify(json, null, 2));
 
-        myStatusBarItem.text = `$(check) FireCoder`;
-        myStatusBarItem.show();
+        statusBarItemFireCoder.text = `$(check) FireCoder`;
+        statusBarItemFireCoder.show();
 
         return {
           items,
@@ -149,20 +145,19 @@ export async function activate(context: vscode.ExtensionContext) {
     },
   };
 
-  myStatusBarItem = vscode.window.createStatusBarItem(
+  statusBarItemFireCoder = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Right,
     100
   );
-  context.subscriptions.push(myStatusBarItem);
-  myStatusBarItem.text = `$(check) FireCoder`;
-  myStatusBarItem.show();
+  context.subscriptions.push(statusBarItemFireCoder);
+  statusBarItemFireCoder.text = `$(check) FireCoder`;
+  statusBarItemFireCoder.show();
   vscode.languages.registerInlineCompletionItemProvider(
     { pattern: "**" },
     provider
   );
 }
 
-// This method is called when your extension is deactivated
 export function deactivate() {
   if (server) {
     server.kill(9);
