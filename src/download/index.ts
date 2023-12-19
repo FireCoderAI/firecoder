@@ -113,8 +113,6 @@ export const getModelUrl = async (): Promise<{
 };
 
 export const downloadServer = async (extensionPath: string) => {
-  console.log("Use default server");
-
   const os = process.platform;
 
   const serverPath = path.join(
@@ -161,8 +159,6 @@ export const downloadServer = async (extensionPath: string) => {
 };
 
 export const downloadModel = async (extensionPath: string) => {
-  console.log("Use default model");
-
   const modelPath = path.join(extensionPath, "model.gguf");
 
   const modelFileInfo = await getModelUrl();

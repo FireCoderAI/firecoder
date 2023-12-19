@@ -30,23 +30,7 @@
     "onStartupFinished"
   ],
   "main": "./out/extension.js",
-  "contributes": {
-    "configuration": {
-      "title": "FireCoder",
-      "properties": {
-        "firecoder.serverPath": {
-          "type": "string",
-          "default": "",
-          "description": "Path to server."
-        },
-        "firecoder.modelPath": {
-          "type": "string",
-          "default": "",
-          "description": "Path to model."
-        }
-      }
-    }
-  },
+  "contributes": {},
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "increment:patch": "vsce publish patch",

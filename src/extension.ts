@@ -9,19 +9,8 @@ export async function activate(context: vscode.ExtensionContext) {
   const fireCoderLog = vscode.window.createOutputChannel("FireCoder");
   fireCoderLog.append("FireCoder activated");
 
-  const config = vscode.workspace.getConfiguration("firecoder");
-
-  const serverPathCustom = config.get("serverPath") as string;
-  const serverPath =
-    serverPathCustom === ""
-      ? await downloadServer(context.extensionPath)
-      : serverPathCustom;
-
-  const modelPathCustom = config.get("modelPath") as string;
-  const modelPath =
-    modelPathCustom === ""
-      ? await downloadModel(context.extensionPath)
-      : modelPathCustom;
+  const serverPath = await downloadServer(context.extensionPath);
+  const modelPath = await downloadModel(context.extensionPath);
 
   if (serverPath && modelPath) {
     server = spawn(serverPath, [`--model`, modelPath, "--port", "39129"], {
