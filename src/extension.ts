@@ -1,6 +1,7 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import * as vscode from "vscode";
 import { downloadServer, downloadModel } from "./download";
+import { delay } from "./utils/delay";
 
 let statusBarItemFireCoder: vscode.StatusBarItem;
 let server: ChildProcessWithoutNullStreams;
@@ -13,9 +14,22 @@ export async function activate(context: vscode.ExtensionContext) {
   const modelPath = await downloadModel(context.extensionPath);
 
   if (serverPath && modelPath) {
-    server = spawn(serverPath, [`--model`, modelPath, "--port", "39129"], {
-      detached: false,
-    });
+    server = spawn(
+      serverPath,
+      [
+        `--model`,
+        modelPath,
+        "--port",
+        "39129",
+        "--parallel",
+        "4",
+        "--ctx-size",
+        "1024",
+      ],
+      {
+        detached: false,
+      }
+    );
     fireCoderLog.append("spawn process");
 
     server.stdout.on("data", function (msg) {
@@ -79,6 +93,10 @@ export async function activate(context: vscode.ExtensionContext) {
         prompt: prompt,
       };
       try {
+        const cancelled = await delay(500, token);
+        if (cancelled) {
+          return;
+        }
         fireCoderLog.append(`Controller is null: ${controller === null}`);
         if (controller === null) {
           controller = new AbortController();
@@ -86,13 +104,18 @@ export async function activate(context: vscode.ExtensionContext) {
           controller.abort();
           controller = new AbortController();
         }
+
         statusBarItemFireCoder.text = `$(loading~spin) FireCoder`;
         statusBarItemFireCoder.show();
+
         const res = await fetch("http://localhost:39129/completion", {
           body: JSON.stringify(body),
           method: "POST",
           signal: controller.signal,
         });
+        if (token.isCancellationRequested) {
+          return;
+        }
         fireCoderLog.append(JSON.stringify(body, null, 2));
 
         if (!res.ok) {
@@ -126,9 +149,13 @@ export async function activate(context: vscode.ExtensionContext) {
           items,
         };
       } catch (error) {
+        const Error = error as Error;
+        if (Error.name === "AbortError") {
+          return;
+        }
         fireCoderLog.append(JSON.stringify(error, null, 2));
 
-        const errorMessage = (error as Error).message;
+        const errorMessage = Error.message;
         vscode.window.showErrorMessage(errorMessage);
       }
     },
