@@ -2,9 +2,10 @@ import path from "node:path";
 import fs from "node:fs";
 import fsPromise from "node:fs/promises";
 import crypto from "node:crypto";
-import { Readable } from "node:stream";
+import { Readable, Transform } from "node:stream";
 import { finished } from "node:stream/promises";
 import { ReadableStream } from "node:stream/web";
+import { createProgress } from "../utils/progress";
 
 const checkFileExists = async (path: string) => {
   try {
@@ -13,6 +14,53 @@ const checkFileExists = async (path: string) => {
   } catch (error) {
     return false;
   }
+};
+
+const formatBytes = (bytes: number, decimals = 2) => {
+  if (!+bytes) {
+    return "0 Bytes";
+  }
+
+  const k = 1000;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TiB", "PiB", "EiB", "ZiB", "YiB"];
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+};
+
+const downloadFile = async (
+  url: string,
+  path: string,
+  title: string,
+  titleProgress: (downloaded: number, total: number) => string
+) => {
+  const progress = createProgress("FireCoder", title);
+
+  const response = await fetch(url);
+  const size = Number(response.headers.get("content-length"));
+
+  let receivedLength = 0;
+
+  const fileStream = fs.createWriteStream(path, { flags: "wx" });
+  const progressStream = new Transform({
+    transform(chunk, encoding, callback) {
+      receivedLength += chunk.length;
+      progress.setMessage(titleProgress(receivedLength, size));
+      const progressValue = (chunk.length / size) * 100;
+      progress.increaseProgress(progressValue);
+      callback(null, chunk);
+    },
+  });
+
+  await finished(
+    Readable.fromWeb(response.body as ReadableStream<any>)
+      .pipe(progressStream)
+      .pipe(fileStream)
+  );
+
+  progress.finishProgress();
 };
 
 export const getCheckSum = async (path: string) => {
@@ -96,15 +144,19 @@ export const downloadServer = async (extensionPath: string) => {
     await fsPromise.unlink(serverPath);
   }
 
-  const response = await fetch(serverFileInfo.url);
-
-  const fileStream = fs.createWriteStream(serverPath, { flags: "wx" });
-  await finished(
-    Readable.fromWeb(response.body as ReadableStream<any>).pipe(fileStream)
+  const titleProgress = (downloaded: number, total: number) => {
+    return `Downloading server: ${formatBytes(downloaded)} / ${formatBytes(
+      total
+    )}`;
+  };
+  await downloadFile(
+    serverFileInfo.url,
+    serverPath,
+    "Downloading server",
+    titleProgress
   );
 
   await fsPromise.chmod(serverPath, 0o755);
-
   return serverPath;
 };
 
@@ -135,11 +187,17 @@ export const downloadModel = async (extensionPath: string) => {
     await fsPromise.unlink(modelPath);
   }
 
-  const response = await fetch(modelFileInfo.url);
+  const titleProgress = (downloaded: number, total: number) => {
+    return `Downloading model: ${formatBytes(downloaded)} / ${formatBytes(
+      total
+    )}`;
+  };
 
-  const fileStream = fs.createWriteStream(modelPath, { flags: "wx" });
-  await finished(
-    Readable.fromWeb(response.body as ReadableStream<any>).pipe(fileStream)
+  await downloadFile(
+    modelFileInfo.url,
+    modelPath,
+    "Downloading model",
+    titleProgress
   );
 
   return modelPath;
