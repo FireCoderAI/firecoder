@@ -2,7 +2,7 @@
 
 Welcome to FireCoder, your self-hosted AI assistant designed to streamline your coding experience right on your local machine.
 
-Feel free to share your feedback or report any issues on our [GitHub repository](https://github.com/FireCoderAI/firecoder-vscode).
+Feel free to share your feedback or report any issues on our [GitHub repository](https://github.com/FireCoderAI/firecoder).
 
 > Note: FireCoder is currently a work in progress, and we appreciate your patience and support as we continue to enhance its capabilities.
 
