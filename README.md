@@ -19,6 +19,11 @@ Feel free to share your feedback or report any issues on our [GitHub repository]
 - **Code Completions:** Presently, FireCoder provides one-line code completions.
 - **Smart Algorithm:** We are actively working on implementing a smart algorithm to enhance prompt preparation.
 
+## Links
+
+- [VS Code Extension](https://marketplace.visualstudio.com/items?itemName=FireCoder.firecoder)
+- [Discord](https://discord.gg/G4Bn4a6wKc)
+
 ## Release Notes
 
 ### Version 0.0.4
