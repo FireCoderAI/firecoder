@@ -8,7 +8,7 @@ Feel free to share your feedback or report any issues on our [GitHub repository]
 
 ## Getting Started
 
-1. Download the extensions for FireCoder.
+1. Download the [vscode extension](https://marketplace.visualstudio.com/items?itemName=FireCoder.firecoder) for FireCoder.
 2. Wait for Server and Model Download.
 3. Start coding with the assistance of our AI-driven features.
 
