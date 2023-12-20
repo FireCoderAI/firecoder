@@ -5,15 +5,28 @@ import crypto from "node:crypto";
 import { Readable, Transform } from "node:stream";
 import { finished } from "node:stream/promises";
 import { ReadableStream } from "node:stream/web";
+import { homedir } from "node:os";
 import { createProgress } from "../utils/progress";
 
-const checkFileExists = async (path: string) => {
+const checkFileOrFolderExists = async (pathToCheck: string) => {
   try {
-    await fsPromise.access(path, fs.constants.F_OK);
+    await fsPromise.access(pathToCheck, fs.constants.F_OK);
     return true;
   } catch (error) {
     return false;
   }
+};
+
+const getSaveFolder = async () => {
+  const pathSaveFolder = path.join(homedir(), ".firecoder");
+
+  const folderIsExist = await checkFileOrFolderExists(pathSaveFolder);
+
+  if (folderIsExist === false) {
+    await fsPromise.mkdir(pathSaveFolder);
+  }
+
+  return pathSaveFolder;
 };
 
 const formatBytes = (bytes: number, decimals = 2) => {
@@ -34,7 +47,7 @@ const downloadFile = async (
   url: string,
   path: string,
   title: string,
-  titleProgress: (downloaded: number, total: number) => string
+  titleProgress: (downloaded: string, total: string) => string
 ) => {
   const progress = createProgress("FireCoder", title);
 
@@ -47,7 +60,9 @@ const downloadFile = async (
   const progressStream = new Transform({
     transform(chunk, encoding, callback) {
       receivedLength += chunk.length;
-      progress.setMessage(titleProgress(receivedLength, size));
+      progress.setMessage(
+        titleProgress(formatBytes(receivedLength), formatBytes(size))
+      );
       const progressValue = (chunk.length / size) * 100;
       progress.increaseProgress(progressValue);
       callback(null, chunk);
@@ -72,7 +87,7 @@ export const getCheckSum = async (path: string) => {
 };
 
 export const getServerUrl = async (
-  os: string
+  os: NodeJS.Platform
 ): Promise<{
   url: string;
   checksum: string;
@@ -112,11 +127,13 @@ export const getModelUrl = async (): Promise<{
   };
 };
 
-export const downloadServer = async (extensionPath: string) => {
+export const downloadServer = async () => {
   const os = process.platform;
 
+  const pathToSave = await getSaveFolder();
+
   const serverPath = path.join(
-    extensionPath,
+    pathToSave,
     "server" + (os === "win32" ? ".exe" : "")
   );
 
@@ -127,7 +144,7 @@ export const downloadServer = async (extensionPath: string) => {
     return;
   }
 
-  const isExists = await checkFileExists(serverPath);
+  const isExists = await checkFileOrFolderExists(serverPath);
   if (isExists) {
     const checkSum = await getCheckSum(serverPath);
 
@@ -142,24 +159,21 @@ export const downloadServer = async (extensionPath: string) => {
     await fsPromise.unlink(serverPath);
   }
 
-  const titleProgress = (downloaded: number, total: number) => {
-    return `Downloading server: ${formatBytes(downloaded)} / ${formatBytes(
-      total
-    )}`;
-  };
   await downloadFile(
     serverFileInfo.url,
     serverPath,
     "Downloading server",
-    titleProgress
+    (downloaded, total) => `Downloading server: ${downloaded} / ${total}`
   );
 
   await fsPromise.chmod(serverPath, 0o755);
   return serverPath;
 };
 
-export const downloadModel = async (extensionPath: string) => {
-  const modelPath = path.join(extensionPath, "model.gguf");
+export const downloadModel = async () => {
+  const pathToSave = await getSaveFolder();
+
+  const modelPath = path.join(pathToSave, "model.gguf");
 
   const modelFileInfo = await getModelUrl();
 
@@ -168,7 +182,7 @@ export const downloadModel = async (extensionPath: string) => {
     return;
   }
 
-  const isExists = await checkFileExists(modelPath);
+  const isExists = await checkFileOrFolderExists(modelPath);
 
   if (isExists) {
     const checkSum = await getCheckSum(modelPath);
@@ -183,17 +197,11 @@ export const downloadModel = async (extensionPath: string) => {
     await fsPromise.unlink(modelPath);
   }
 
-  const titleProgress = (downloaded: number, total: number) => {
-    return `Downloading model: ${formatBytes(downloaded)} / ${formatBytes(
-      total
-    )}`;
-  };
-
   await downloadFile(
     modelFileInfo.url,
     modelPath,
     "Downloading model",
-    titleProgress
+    (downloaded, total) => `Downloading model: ${downloaded} / ${total}`
   );
 
   return modelPath;

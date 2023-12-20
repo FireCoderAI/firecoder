@@ -10,8 +10,8 @@ export async function activate(context: vscode.ExtensionContext) {
   const fireCoderLog = vscode.window.createOutputChannel("FireCoder");
   fireCoderLog.append("FireCoder activated");
 
-  const serverPath = await downloadServer(context.extensionPath);
-  const modelPath = await downloadModel(context.extensionPath);
+  const serverPath = await downloadServer();
+  const modelPath = await downloadModel();
 
   if (serverPath && modelPath) {
     server = spawn(
