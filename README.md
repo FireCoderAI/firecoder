@@ -22,6 +22,7 @@ Feel free to share your feedback or report any issues on our [GitHub repository]
 ## Links
 
 - [VS Code Extension](https://marketplace.visualstudio.com/items?itemName=FireCoder.firecoder)
+- [Twitter](https://twitter.com/firecoderai)
 - [Discord](https://discord.gg/G4Bn4a6wKc)
 
 ## Release Notes
