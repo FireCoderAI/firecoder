@@ -1,14 +1,14 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import * as vscode from "vscode";
 import { downloadServer, downloadModel } from "./download";
-import { delay } from "./utils/delay";
+import { delay } from "./common/utils/delay";
+import Logger from "./common/logger";
 
 let statusBarItemFireCoder: vscode.StatusBarItem;
 let server: ChildProcessWithoutNullStreams;
 
 export async function activate(context: vscode.ExtensionContext) {
-  const fireCoderLog = vscode.window.createOutputChannel("FireCoder");
-  fireCoderLog.append("FireCoder activated");
+  Logger.info("FireCoder activated");
 
   const serverPath = await downloadServer();
   const modelPath = await downloadModel();
@@ -30,19 +30,18 @@ export async function activate(context: vscode.ExtensionContext) {
         detached: false,
       }
     );
-    fireCoderLog.append("spawn process");
 
     server.stdout.on("data", function (msg) {
-      fireCoderLog.append(`stdout: ${msg}`);
+      Logger.debug(msg, "llama");
     });
     server.stderr.on("data", function (msg) {
-      fireCoderLog.append(`stderr: ${msg}`);
+      Logger.error(msg, "llama");
     });
     server.on("error", (err) => {
-      fireCoderLog.append(`error: ${err.message}`);
-      fireCoderLog.append(`name: ${err.name}`);
-      fireCoderLog.append(`stack: ${err.stack}`);
-      fireCoderLog.append(`cause: ${err.cause}`);
+      Logger.error(`error: ${err.message}`);
+      Logger.error(`name: ${err.name}`);
+      Logger.error(`stack: ${err.stack}`);
+      Logger.error(`cause: ${err.cause}`);
     });
     server.on("close", (code) => {
       console.log(`child process exited with code ${code}`);
@@ -97,7 +96,7 @@ export async function activate(context: vscode.ExtensionContext) {
         if (cancelled) {
           return;
         }
-        fireCoderLog.append(`Controller is null: ${controller === null}`);
+        Logger.info(`Controller is null: ${controller === null}`);
         if (controller === null) {
           controller = new AbortController();
         } else {
@@ -116,11 +115,11 @@ export async function activate(context: vscode.ExtensionContext) {
         if (token.isCancellationRequested) {
           return;
         }
-        fireCoderLog.append(JSON.stringify(body, null, 2));
+        Logger.debug(body, "Completion request");
 
         if (!res.ok) {
-          fireCoderLog.append(JSON.stringify(res.status, null, 2));
-          fireCoderLog.append(JSON.stringify(res.statusText, null, 2));
+          Logger.error(res.status);
+          Logger.error(res.statusText);
 
           vscode.window.showErrorMessage(
             `Error: ${res.status} ${res.statusText}`
@@ -140,7 +139,8 @@ export async function activate(context: vscode.ExtensionContext) {
             range: new vscode.Range(position, position),
           });
         }
-        fireCoderLog.append(JSON.stringify(json, null, 2));
+        Logger.debug(body, "Completion response");
+        Logger.debug(json, "Completion response json");
 
         statusBarItemFireCoder.text = `$(check) FireCoder`;
         statusBarItemFireCoder.show();
@@ -153,7 +153,7 @@ export async function activate(context: vscode.ExtensionContext) {
         if (Error.name === "AbortError") {
           return;
         }
-        fireCoderLog.append(JSON.stringify(error, null, 2));
+        Logger.error(error);
 
         const errorMessage = Error.message;
         vscode.window.showErrorMessage(errorMessage);

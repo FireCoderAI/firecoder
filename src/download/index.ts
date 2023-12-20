@@ -6,7 +6,7 @@ import { Readable, Transform } from "node:stream";
 import { finished } from "node:stream/promises";
 import { ReadableStream } from "node:stream/web";
 import { homedir } from "node:os";
-import { createProgress } from "../utils/progress";
+import { createProgress } from "../common/utils/progress";
 
 const checkFileOrFolderExists = async (pathToCheck: string) => {
   try {
