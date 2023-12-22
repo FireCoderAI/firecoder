@@ -1,72 +1,22 @@
-import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import * as vscode from "vscode";
-import { downloadServer, downloadModel } from "./download";
 import { delay } from "./common/utils/delay";
 import Logger from "./common/logger";
-
-let statusBarItemFireCoder: vscode.StatusBarItem;
-let server: ChildProcessWithoutNullStreams;
+import { getPrompt } from "./common/prompt";
+import { startServer, stopServer } from "./common/server";
+import statusBar from "./common/statusBar";
 
 export async function activate(context: vscode.ExtensionContext) {
-  Logger.info("FireCoder activated");
+  Logger.info("FireCoder is starting");
 
-  const serverPath = await downloadServer();
-  const modelPath = await downloadModel();
+  statusBar.init(context);
 
-  if (serverPath && modelPath) {
-    server = spawn(
-      serverPath,
-      [
-        `--model`,
-        modelPath,
-        "--port",
-        "39129",
-        "--parallel",
-        "4",
-        "--ctx-size",
-        "1024",
-      ],
-      {
-        detached: false,
-      }
-    );
-
-    server.stdout.on("data", function (msg) {
-      Logger.debug(msg, "llama");
-    });
-    server.stderr.on("data", function (msg) {
-      Logger.error(msg, "llama");
-    });
-    server.on("error", (err) => {
-      Logger.error(`error: ${err.message}`);
-      Logger.error(`name: ${err.name}`);
-      Logger.error(`stack: ${err.stack}`);
-      Logger.error(`cause: ${err.cause}`);
-    });
-    server.on("close", (code) => {
-      console.log(`child process exited with code ${code}`);
-    });
-  }
+  await startServer();
 
   let controller: AbortController | null = null;
   const provider: vscode.InlineCompletionItemProvider = {
     async provideInlineCompletionItems(document, position, context, token) {
       const items: vscode.InlineCompletionItem[] = [];
-      const textBefore = document.getText(
-        new vscode.Range(new vscode.Position(0, 0), position)
-      );
-      const textAfter = document.getText(
-        new vscode.Range(
-          position,
-          new vscode.Position(
-            document.lineCount,
-            document.lineAt(document.lineCount - 1).text.length
-          )
-        )
-      );
-      const textBeforeSlice = textBefore.slice(-100);
-      const textAfterSlice = textAfter.slice(0, 100);
-      const prompt = `<｜fim▁begin｜>${textBeforeSlice}<｜fim▁hole｜>${textAfterSlice}<｜fim▁end｜>`;
+      const prompt = getPrompt(document, position);
       const body = {
         stream: false,
         n_predict: 400,
@@ -103,9 +53,7 @@ export async function activate(context: vscode.ExtensionContext) {
           controller.abort();
           controller = new AbortController();
         }
-
-        statusBarItemFireCoder.text = `$(loading~spin) FireCoder`;
-        statusBarItemFireCoder.show();
+        statusBar.showProgress();
 
         const res = await fetch("http://localhost:39129/completion", {
           body: JSON.stringify(body),
@@ -142,8 +90,7 @@ export async function activate(context: vscode.ExtensionContext) {
         Logger.debug(body, "Completion response");
         Logger.debug(json, "Completion response json");
 
-        statusBarItemFireCoder.text = `$(check) FireCoder`;
-        statusBarItemFireCoder.show();
+        statusBar.hideProgress();
 
         return {
           items,
@@ -161,13 +108,6 @@ export async function activate(context: vscode.ExtensionContext) {
     },
   };
 
-  statusBarItemFireCoder = vscode.window.createStatusBarItem(
-    vscode.StatusBarAlignment.Right,
-    100
-  );
-  context.subscriptions.push(statusBarItemFireCoder);
-  statusBarItemFireCoder.text = `$(check) FireCoder`;
-  statusBarItemFireCoder.show();
   vscode.languages.registerInlineCompletionItemProvider(
     { pattern: "**" },
     provider
@@ -175,7 +115,5 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-  if (server) {
-    server.kill(9);
-  }
+  stopServer();
 }
