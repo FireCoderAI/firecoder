@@ -6,7 +6,7 @@ import statusBar from "./statusBar";
 let server: ChildProcessWithoutNullStreams | null;
 
 export const startServer = async () => {
-  statusBar.showProgress();
+  const { stopTask } = statusBar.startTask();
   const serverPath = await downloadServer();
   const modelPath = await downloadModel();
 
@@ -46,7 +46,7 @@ export const startServer = async () => {
   server.on("close", (code) => {
     Logger.trace(`child process exited with code ${code}`, "llama");
   });
-  statusBar.hideProgress();
+  stopTask();
 };
 
 export const stopServer = async () => {

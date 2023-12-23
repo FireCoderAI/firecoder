@@ -18,3 +18,23 @@ export const delay = async (
     }, milliseconds);
   });
 };
+
+export const abortInterval = (token: vscode.CancellationToken) => {
+  const abortController = new AbortController();
+
+  const interval = setInterval(() => {
+    if (token.isCancellationRequested) {
+      abortController.abort();
+      clearInterval(interval);
+    }
+  }, 10);
+
+  const finish = () => {
+    clearInterval(interval);
+  };
+
+  return {
+    abortController,
+    requestFinish: finish,
+  };
+};
