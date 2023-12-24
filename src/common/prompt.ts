@@ -16,8 +16,8 @@ export const getPrompt = (
       )
     )
   );
-  const textBeforeSlice = textBefore.slice(-100);
-  const textAfterSlice = textAfter.slice(0, 100);
+  const textBeforeSlice = textBefore.slice(-300);
+  const textAfterSlice = textAfter.slice(0, 300);
   const prompt = `<｜fim▁begin｜>${textBeforeSlice}<｜fim▁hole｜>${textAfterSlice}<｜fim▁end｜>`;
 
   return prompt;

@@ -1,7 +1,5 @@
 import * as vscode from "vscode";
-import { delay } from "./common/utils/intervals";
 import Logger from "./common/logger";
-import { getPrompt } from "./common/prompt";
 import { startServer, stopServer } from "./common/server";
 import statusBar from "./common/statusBar";
 import { getInlineCompletionProvider } from "./common/completion";
