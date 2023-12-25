@@ -15,6 +15,8 @@ const logCompletion = () => {
 };
 
 export const getInlineCompletionProvider = () => {
+  let maxToken = 50;
+  let expectedTime = 1000;
   const provider: vscode.InlineCompletionItemProvider = {
     provideInlineCompletionItems: async (
       document,
@@ -34,7 +36,7 @@ export const getInlineCompletionProvider = () => {
       const { abortController, requestFinish } = abortInterval(token);
 
       const items: vscode.InlineCompletionItem[] = [];
-      const prompt = getPrompt(document, position);
+      const prompt = await getPrompt(document, position, maxToken);
       const { stopTask } = statusBar.startTask();
 
       const body = {
@@ -58,7 +60,7 @@ export const getInlineCompletionProvider = () => {
         n_probs: 0,
         image_data: [],
         cache_prompt: false,
-        slot_id: 1,
+        slot_id: -1,
         prompt: prompt,
       };
       try {
@@ -71,7 +73,6 @@ export const getInlineCompletionProvider = () => {
         });
 
         if (!res.ok) {
-          Logger.error(res.status);
           Logger.error(res.statusText);
 
           vscode.window.showErrorMessage(
@@ -102,7 +103,7 @@ export const getInlineCompletionProvider = () => {
           return;
         }
 
-        Logger.debug(body, "Completion request");
+        // Logger.debug(body, "Completion request");
 
         if (json.content !== "") {
           items.push({
@@ -114,13 +115,15 @@ export const getInlineCompletionProvider = () => {
         loggerCompletion.info(
           `Slot Id: ${json.slot_id}; ` +
             `Total time: ${(performance.now() - startTime).toFixed(2)}; ` +
-            `PP: ${json.timings.prompt_per_second.toFixed(2)}; [t/s] ` +
-            `TG: ${json.timings.predicted_per_second.toFixed(2)}; [t/s]`
+            `PP: ${json?.timings?.prompt_per_second?.toFixed(2)}; [t/s] ` +
+            `TG: ${json?.timings?.predicted_per_second?.toFixed(2)}; [t/s]`
         );
-        Logger.debug(json, "Completion response json");
+        // Logger.debug(json, "Completion response json");
+
+        maxToken *= expectedTime / (performance.now() - startTime);
+        loggerCompletion.info(`maxToken: ${maxToken}`);
 
         loggerCompletion.info("Completion finish");
-
         return {
           items,
         };

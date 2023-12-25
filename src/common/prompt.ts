@@ -1,8 +1,35 @@
 import * as vscode from "vscode";
+import Logger from "./logger";
 
-export const getPrompt = (
+const tokenize = async (text: string) => {
+  try {
+    const body = JSON.stringify({
+      content: text,
+    });
+    const res = await fetch("http://localhost:39129/tokenize", {
+      body: body,
+      method: "POST",
+      headers: {
+        Connection: "keep-alive",
+        "Content-Type": "application/json",
+      },
+    });
+
+    const json = (await res.json()) as {
+      tokens: number[];
+    };
+
+    return json.tokens.length;
+  } catch (error) {
+    debugger;
+    return 0;
+  }
+};
+
+export const getPrompt = async (
   document: vscode.TextDocument,
-  position: vscode.Position
+  position: vscode.Position,
+  maxToken = 200
 ) => {
   const textBefore = document.getText(
     new vscode.Range(new vscode.Position(0, 0), position)
@@ -16,8 +43,38 @@ export const getPrompt = (
       )
     )
   );
-  const textBeforeSlice = textBefore.slice(-300);
-  const textAfterSlice = textAfter.slice(0, 300);
+
+  let before = 50;
+  let after = 50;
+  let textBeforeSlice: string;
+  let textAfterSlice: string;
+  Logger.startPerfMarker("Prepare prompt");
+  while (true) {
+    textBeforeSlice = textBefore.slice(before * -1);
+    textAfterSlice = textAfter.slice(0, after);
+    Logger.startPerfMarker("Prepare prompt request");
+
+    const [tokensBeforeSlice, tokensAfterSlice] = await Promise.all([
+      tokenize(textBeforeSlice),
+      tokenize(textAfterSlice),
+    ]);
+    Logger.endPerfMarker("Prepare prompt request");
+
+    const resTokens = tokensAfterSlice + tokensBeforeSlice;
+    if (
+      resTokens >= maxToken ||
+      (textBeforeSlice.length >= textBefore.length &&
+        textAfterSlice.length >= textAfter.length)
+    ) {
+      Logger.info(`Tokens count: ${resTokens}`);
+      break;
+    }
+
+    before = Number((before * (maxToken / resTokens)).toFixed(0)) + 5;
+    after = Number((after * (maxToken / resTokens)).toFixed(0)) + 5;
+  }
+  Logger.endPerfMarker("Prepare prompt");
+
   const prompt = `<｜fim▁begin｜>${textBeforeSlice}<｜fim▁hole｜>${textAfterSlice}<｜fim▁end｜>`;
 
   return prompt;
