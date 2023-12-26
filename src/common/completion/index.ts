@@ -16,7 +16,7 @@ const logCompletion = () => {
 
 export const getInlineCompletionProvider = () => {
   let maxToken = 50;
-  let expectedTime = 1000;
+  let expectedTime = 1500;
   const provider: vscode.InlineCompletionItemProvider = {
     provideInlineCompletionItems: async (
       document,

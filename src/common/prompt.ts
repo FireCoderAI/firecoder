@@ -29,8 +29,11 @@ const tokenize = async (text: string) => {
 export const getPrompt = async (
   document: vscode.TextDocument,
   position: vscode.Position,
-  maxToken = 200
+  maxTokenExpect = 200
 ) => {
+  const maxTokenHardLimit = 500;
+  const maxToken =
+    maxTokenExpect > maxTokenHardLimit ? maxTokenHardLimit : maxTokenExpect;
   const textBefore = document.getText(
     new vscode.Range(new vscode.Position(0, 0), position)
   );

@@ -28,7 +28,7 @@ export const startServer = async () => {
       "--threads-batch",
       "8",
       "--ctx-size",
-      "4096",
+      "2048",
     ],
     {
       detached: false,
