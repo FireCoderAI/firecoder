@@ -53,5 +53,9 @@
     "glob": "^10.3.10",
     "mocha": "^10.2.0",
     "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@grafana/faro-core": "^1.3.5",
+    "@grafana/faro-web-sdk": "^1.3.5"
   }
 }

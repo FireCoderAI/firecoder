@@ -4,6 +4,7 @@ import { getPrompt } from "../prompt";
 import { abortInterval, delay } from "../utils/intervals";
 import Logger from "../logger";
 import statusBar from "../statusBar";
+import { TelemetryInstance } from "../telemetry";
 
 const logCompletion = () => {
   const uuid = randomUUID();
@@ -65,6 +66,9 @@ export const getInlineCompletionProvider = () => {
       };
       try {
         loggerCompletion.info("Start request");
+
+        TelemetryInstance.sendTelemetryEvent("Start request");
+
         const startTime = performance.now();
         const res = await fetch("http://localhost:39129/completion", {
           body: JSON.stringify(body),
