@@ -6,11 +6,26 @@ on:
       - "add-ci"
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+  build-cmake-ubuntu:
+    runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          repository: "ggerganov/llama.cpp"
+          ref: "b1732"
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install build-essential
+      - name: Build
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          cmake --build . --config Release --parallel 2
+      - name: Test
+        run: |
+          cd build
+          ctest --verbose --timeout 900
