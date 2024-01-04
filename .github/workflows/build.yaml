@@ -49,7 +49,7 @@ jobs:
         with:
           cuda: "12.1.0"
           method: "network"
-          sub-packages: '["nvcc", "cublas"]'
+          sub-packages: '["nvcc", "cublas_dev"]'
 
       - name: Build
         id: cmake_build
