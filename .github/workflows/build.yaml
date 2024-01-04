@@ -1,0 +1,57 @@
+name: Build Server
+
+on:
+  push:
+    branches:
+      - "add-ci"
+
+jobs:
+  build-cmake-ubuntu:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: "ggerganov/llama.cpp"
+          ref: "b1732"
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install build-essential
+      - name: Build
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DBUILD_SHARED_LIBS=ON -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF
+          cmake --build . --config Release --parallel $(nproc)
+      - name: Test
+        run: |
+          cd build
+          ctest --verbose --timeout 900
+
+  build-cmake-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: "ggerganov/llama.cpp"
+          ref: "b1732"
+      - name: Windows GitHub Actions environment variables List
+        run: env
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install build-essential
+      - name: Build
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DBUILD_SHARED_LIBS=ON -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF
+          cmake --build . --config Release --parallel ${env:NUMBER_OF_PROCESSORS}
+      - name: Test
+        run: |
+          cd build
+          ctest --verbose --timeout 900
