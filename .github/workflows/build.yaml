@@ -50,7 +50,7 @@ jobs:
           cuda: "12.2.0"
           method: "network"
           sub-packages: '["nvcc", "cudart"]'
-          non-cuda-sub-packages: '["libcublas", "libcublas-dev", "cuda-toolkit-12-2"]'
+          non-cuda-sub-packages: '["libcublas", "libcublas-dev", "cuda-toolkit"]'
 
       - name: Build
         id: cmake_build
