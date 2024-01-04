@@ -29,6 +29,35 @@ jobs:
         run: |
           cd build
           ctest --verbose --timeout 900
+  build-cmake-ubuntu-cublas:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: "ggerganov/llama.cpp"
+          ref: "b1732"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install build-essential
+
+      - name: Install cuda-toolkit
+        uses: Jimver/cuda-toolkit@v0.2.11
+        with:
+          cuda: "12.2.0"
+          method: "network"
+          sub-packages: '["nvcc", "cudart", "cublas", "cublas_dev", "thrust", "visual_studio_integration"]'
+
+      - name: Build
+        id: cmake_build
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DBUILD_SHARED_LIBS=ON -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF -DLLAMA_CUBLAS=ON
+          cmake --build . --config Release --parallel $(nproc)
 
   build-cmake-windows:
     runs-on: windows-latest
@@ -51,6 +80,32 @@ jobs:
         run: |
           cd build
           ctest -C Release --verbose --timeout 900
+
+  build-cmake-windows-cublas:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: "ggerganov/llama.cpp"
+          ref: "b1732"
+
+      - name: Install cuda-toolkit
+        uses: Jimver/cuda-toolkit@v0.2.11
+        with:
+          cuda: "12.2.0"
+          method: "network"
+          sub-packages: '["nvcc", "cudart", "cublas", "cublas_dev", "thrust", "visual_studio_integration"]'
+
+      - name: Build
+        id: cmake_build
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DBUILD_SHARED_LIBS=ON -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF -DLLAMA_CUBLAS=ON
+          cmake --build . --config Release --parallel ${env:NUMBER_OF_PROCESSORS}
+
   build-cmake-macOS:
     runs-on: macos-latest
 
