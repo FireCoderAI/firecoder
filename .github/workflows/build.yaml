@@ -51,3 +51,31 @@ jobs:
         run: |
           cd build
           ctest -C Release --verbose --timeout 900
+  build-cmake-macOS:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: "ggerganov/llama.cpp"
+          ref: "b1732"
+
+      - name: Install dependencies
+        run: |
+          brew update
+
+      - name: Build
+        id: cmake_build
+        run: |
+          sysctl -a
+          mkdir build
+          cd build
+          cmake -DLLAMA_METAL=OFF ..
+          cmake --build . --config Release --parallel $(sysctl -n hw.logicalcpu)
+
+      - name: Test
+        id: cmake_test
+        run: |
+          cd build
+          ctest --verbose --timeout 900
