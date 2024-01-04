@@ -47,10 +47,10 @@ jobs:
       - name: Install cuda-toolkit
         uses: Jimver/cuda-toolkit@v0.2.11
         with:
-          cuda: "12.1.0"
+          cuda: "12.2.0"
           method: "network"
-          sub-packages: '["nvcc"]'
-          non-cuda-sub-packages: '["libcublas"]'
+          sub-packages: '["nvcc", "cudart"]'
+          non-cuda-sub-packages: '["libcublas", "libcublas-dev"]'
 
       - name: Build
         id: cmake_build
