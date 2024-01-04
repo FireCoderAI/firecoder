@@ -50,4 +50,4 @@ jobs:
       - name: Test
         run: |
           cd build
-          ctest --verbose --timeout 900
+          ctest -C Release --verbose --timeout 900
