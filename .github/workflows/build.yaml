@@ -25,24 +25,24 @@ jobs:
         with:
           repository: "ggerganov/llama.cpp"
           ref: ${{ env.LLAMA-TAG }}
+
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install build-essential
+
       - name: Build
         run: |
           mkdir build
           cd build
           cmake .. -DBUILD_SHARED_LIBS=ON -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF
           cmake --build . --config Release --parallel $(nproc)
-      # - name: Test
-      #   run: |
-      #     cd build
-      #     ctest --verbose --timeout 900
-      - run: ls -lha
-      - run: ls -lha ./build
-      - run: ls -lha ./build/bin/server
-      - run: pwd
+
+      - name: Test
+        run: |
+          cd build
+          ctest --verbose --timeout 900
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -65,23 +65,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install build-essential
 
-      # - name: Install cuda-toolkit
-      #   uses: Jimver/cuda-toolkit@v0.2.11
-      #   with:
-      #     cuda: "12.2.0"
-      #     method: "network"
-      #     sub-packages: '["nvcc", "cudart"]'
-      #     non-cuda-sub-packages: '["libcublas", "libcublas-dev", "cuda-toolkit"]'
-      # - name: Install cuda-toolkit
-      #   run: |
-      #     wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
-      #     sudo dpkg -i cuda-keyring_1.1-1_all.deb
-      #     sudo apt-get update
-      #     sudo apt-get -y install cuda-toolkit-12-2
       - name: Install cuda-toolkit
         run: |
           sudo apt-get update
           sudo apt-get -y install nvidia-cuda-toolkit
+
       - name: Build
         id: cmake_build
         run: |
@@ -89,6 +77,12 @@ jobs:
           cd build
           cmake .. -DBUILD_SHARED_LIBS=ON -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF -DLLAMA_CUBLAS=ON
           cmake --build . --config Release --parallel $(nproc)
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-cmake-ubuntu-cublas-${{env.LLAMA-TAG}}-${{ github.sha }}
+          path: build/bin/server
+          retention-days: 1
 
   build-cmake-windows:
     runs-on: windows-latest
@@ -111,6 +105,12 @@ jobs:
         run: |
           cd build
           ctest -C Release --verbose --timeout 900
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-cmake-windows-${{env.LLAMA-TAG}}-${{ github.sha }}
+          path: build/bin/server
+          retention-days: 1
 
   build-cmake-windows-cublas:
     runs-on: windows-latest
@@ -136,6 +136,13 @@ jobs:
           cd build
           cmake .. -DBUILD_SHARED_LIBS=ON -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF -DLLAMA_CUBLAS=ON
           cmake --build . --config Release --parallel ${env:NUMBER_OF_PROCESSORS}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-cmake-windows-cublas-${{env.LLAMA-TAG}}-${{ github.sha }}
+          path: build/bin/server
+          retention-days: 1
 
   build-cmake-macOS:
     runs-on: macos-latest
@@ -165,6 +172,14 @@ jobs:
         run: |
           cd build
           ctest --verbose --timeout 900
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-cmake-macOS-${{env.LLAMA-TAG}}-${{ github.sha }}
+          path: build/bin/server
+          retention-days: 1
+
   build-cmake-macOS-metal:
     runs-on: macos-latest
 
@@ -188,10 +203,22 @@ jobs:
           cmake ..
           cmake --build . --config Release --parallel $(sysctl -n hw.logicalcpu)
 
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-cmake-macOS-metal-${{env.LLAMA-TAG}}-${{ github.sha }}
+          path: build/bin/server
+          retention-days: 1
+
   upload-server:
     runs-on: ubuntu-latest
     needs:
       - build-cmake-ubuntu
+      - build-cmake-ubuntu-cublas
+      - build-cmake-windows
+      - build-cmake-windows-cublas
+      - build-cmake-macOS
+      - build-cmake-macOS-metal
 
     steps:
       - name: Install minio
@@ -204,7 +231,32 @@ jobs:
         with:
           name: build-cmake-ubuntu-${{env.LLAMA-TAG}}-${{ github.sha }}
           path: ./build-cmake-ubuntu
-      - run: ls -lha
-      - run: ls -lha ./build-cmake-ubuntu
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-cmake-ubuntu-cublas-${{env.LLAMA-TAG}}-${{ github.sha }}
+          path: ./build-cmake-ubuntu-cublas
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-cmake-windows-${{env.LLAMA-TAG}}-${{ github.sha }}
+          path: ./build-cmake-windows
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-cmake-windows-cublas-${{env.LLAMA-TAG}}-${{ github.sha }}
+          path: ./build-cmake-windows-cublas
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-cmake-macOS-${{env.LLAMA-TAG}}-${{ github.sha }}
+          path: ./build-cmake-macOS
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-cmake-macOS-metal-${{env.LLAMA-TAG}}-${{ github.sha }}
+          path: ./build-cmake-macOS-metal
+
       - name: Upload
-        run: ./mc cp ./build-cmake-ubuntu/server r2/${{secrets.AWS_BUCKET}}
+        run: |
+          ./mc cp ./build-cmake-ubuntu/server         r2/${{secrets.AWS_BUCKET}}/linux-x86-64-${{env.LLAMA-TAG}}
+          ./mc cp ./build-cmake-ubuntu-cublas/server  r2/${{secrets.AWS_BUCKET}}/linux-x86-64-cublas-${{env.LLAMA-TAG}}
+          ./mc cp ./build-cmake-windows/server        r2/${{secrets.AWS_BUCKET}}/windows-x86-64-${{env.LLAMA-TAG}}
+          ./mc cp ./build-cmake-windows-cublas/server r2/${{secrets.AWS_BUCKET}}/windows-x86-64-cublas-${{env.LLAMA-TAG}}
+          ./mc cp ./build-cmake-macOS/server          r2/${{secrets.AWS_BUCKET}}/macOS-x86-64-${{env.LLAMA-TAG}}
+          ./mc cp ./build-cmake-macOS-metal/server    r2/${{secrets.AWS_BUCKET}}/macOS-x86-64-metal-${{env.LLAMA-TAG}}
