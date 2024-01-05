@@ -51,13 +51,16 @@ jobs:
       #     method: "network"
       #     sub-packages: '["nvcc", "cudart"]'
       #     non-cuda-sub-packages: '["libcublas", "libcublas-dev", "cuda-toolkit"]'
+      # - name: Install cuda-toolkit
+      #   run: |
+      #     wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.1-1_all.deb
+      #     sudo dpkg -i cuda-keyring_1.1-1_all.deb
+      #     sudo apt-get update
+      #     sudo apt-get -y install cuda-toolkit-12-2
       - name: Install cuda-toolkit
         run: |
-          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.1-1_all.deb
-          sudo dpkg -i cuda-keyring_1.1-1_all.deb
           sudo apt-get update
-          sudo apt-get -y install cuda-toolkit-12-2
-
+          sudo apt-get -y install nvidia-cuda-toolkit
       - name: Build
         id: cmake_build
         run: |
