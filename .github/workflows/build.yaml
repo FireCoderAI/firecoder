@@ -107,8 +107,8 @@ jobs:
           ctest -C Release --verbose --timeout 900
 
       - run: |
-          ls -lha
-          ls -lha build
+          ls 
+          ls build
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
