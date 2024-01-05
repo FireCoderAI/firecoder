@@ -50,7 +50,7 @@ jobs:
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           aws_bucket: ${{ secrets.AWS_BUCKET }}
           endpoint: ${{ secrets.AWS_ENDPOINT }}
-          source_dir: "./build/bin/server"
+          source_dir: "build/bin/server"
 
   build-cmake-ubuntu-cublas:
     runs-on: ubuntu-latest
