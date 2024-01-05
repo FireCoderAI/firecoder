@@ -93,8 +93,7 @@ jobs:
         with:
           repository: "ggerganov/llama.cpp"
           ref: ${{ env.LLAMA-TAG }}
-      - name: Windows GitHub Actions environment variables List
-        run: env
+
       - name: Build
         run: |
           mkdir build
@@ -109,6 +108,7 @@ jobs:
       - run: |
           ls 
           ls build
+          ls build/bin
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
