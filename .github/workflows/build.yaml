@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: "ggerganov/llama.cpp"
-          ref: github.event.inputs.create_release
+          ref: github.event.inputs.llama-tag
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -53,7 +53,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: "ggerganov/llama.cpp"
-          ref: github.event.inputs.create_release
+          ref: github.event.inputs.llama-tag
 
       - name: Install dependencies
         run: |
@@ -93,7 +93,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: "ggerganov/llama.cpp"
-          ref: github.event.inputs.create_release
+          ref: github.event.inputs.llama-tag
       - name: Windows GitHub Actions environment variables List
         run: env
       - name: Build
@@ -115,7 +115,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: "ggerganov/llama.cpp"
-          ref: github.event.inputs.create_release
+          ref: github.event.inputs.llama-tag
 
       - name: Install cuda-toolkit
         uses: Jimver/cuda-toolkit@v0.2.11
@@ -140,7 +140,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: "ggerganov/llama.cpp"
-          ref: github.event.inputs.create_release
+          ref: github.event.inputs.llama-tag
 
       - name: Install dependencies
         run: |
@@ -168,7 +168,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: "ggerganov/llama.cpp"
-          ref: github.event.inputs.create_release
+          ref: github.event.inputs.llama-tag
 
       - name: Install dependencies
         run: |
