@@ -205,5 +205,6 @@ jobs:
           name: build-cmake-ubuntu-${{env.LLAMA-TAG}}-${{ github.sha }}
           path: ./build-cmake-ubuntu
       - run: ls -lha
+      - run: ls -lha ./build-cmake-ubuntu
       - name: Upload
-        run: ./mc cp ./build-cmake-ubuntu r2/${{secrets.AWS_BUCKET}}
+        run: ./mc cp ./build-cmake-ubuntu/server r2/${{secrets.AWS_BUCKET}}
