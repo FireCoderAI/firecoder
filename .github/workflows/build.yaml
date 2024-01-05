@@ -30,7 +30,7 @@ jobs:
           cd build
           ctest --verbose --timeout 900
   build-cmake-ubuntu-cublas:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
@@ -53,7 +53,7 @@ jobs:
       #     non-cuda-sub-packages: '["libcublas", "libcublas-dev", "cuda-toolkit"]'
       # - name: Install cuda-toolkit
       #   run: |
-      #     wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.1-1_all.deb
+      #     wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
       #     sudo dpkg -i cuda-keyring_1.1-1_all.deb
       #     sudo apt-get update
       #     sudo apt-get -y install cuda-toolkit-12-2
