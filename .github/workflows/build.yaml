@@ -41,7 +41,7 @@ jobs:
       #     ctest --verbose --timeout 900
       - run: ls -lha
       - run: ls -lha ./build
-      - run: ls -lha ./build/bin
+      - run: ls -lha ./build/bin/server
       - run: pwd
       - name: Upload server
         uses: shallwefootball/upload-s3-action@master
@@ -50,7 +50,7 @@ jobs:
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           aws_bucket: ${{ secrets.AWS_BUCKET }}
           endpoint: ${{ secrets.AWS_ENDPOINT }}
-          source_dir: "build/server"
+          source_dir: "./build/bin/server"
 
   build-cmake-ubuntu-cublas:
     runs-on: ubuntu-latest
