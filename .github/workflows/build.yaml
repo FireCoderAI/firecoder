@@ -265,7 +265,7 @@ jobs:
             const fs = require('fs');
             const crypto = require("crypto");
 
-            const s3Path = 'https://pub-ad9e0b7360bc4259878d0f81b89c5405.r2.dev/${{ github.sha }}/${{env.LLAMA-TAG}}';
+            const s3Path = 'https://pub-ad9e0b7360bc4259878d0f81b89c5405.r2.dev/${{ github.sha }}/${{env.LLAMA-TAG}}/';
 
             const getCheckSum = (path) => {
               const file = fs.readFileSync(path);
