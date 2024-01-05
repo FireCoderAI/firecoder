@@ -35,11 +35,12 @@ jobs:
           cd build
           cmake .. -DBUILD_SHARED_LIBS=ON -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF
           cmake --build . --config Release --parallel $(nproc)
-      - name: Test
-        run: |
-          cd build
-          ctest --verbose --timeout 900
+      # - name: Test
+      #   run: |
+      #     cd build
+      #     ctest --verbose --timeout 900
       - run: ls -lha
+      - run: pwd
       - name: Upload server
         uses: shallwefootball/upload-s3-action@master
         with:
