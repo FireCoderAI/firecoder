@@ -41,6 +41,7 @@ jobs:
       #     ctest --verbose --timeout 900
       - run: ls -lha
       - run: ls -lha ./build
+      - run: ls -lha ./build/bin
       - run: pwd
       - name: Upload server
         uses: shallwefootball/upload-s3-action@master
