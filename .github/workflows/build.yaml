@@ -16,7 +16,7 @@ env:
   LLAMA-TAG: "b1768"
 
 jobs:
-  build-cmake-ubuntu:
+  build-cmake-linux:
     runs-on: ubuntu-latest
 
     steps:
@@ -46,11 +46,11 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-cmake-ubuntu-${{env.LLAMA-TAG}}-${{ github.sha }}
+          name: build-cmake-linux-${{env.LLAMA-TAG}}-${{ github.sha }}
           path: build/bin/server
           retention-days: 1
 
-  build-cmake-ubuntu-cublas:
+  build-cmake-linux-cublas:
     runs-on: ubuntu-latest
 
     steps:
@@ -80,7 +80,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-cmake-ubuntu-cublas-${{env.LLAMA-TAG}}-${{ github.sha }}
+          name: build-cmake-linux-cublas-${{env.LLAMA-TAG}}-${{ github.sha }}
           path: build/bin/server
           retention-days: 1
 
@@ -211,8 +211,8 @@ jobs:
   upload-server:
     runs-on: ubuntu-latest
     needs:
-      - build-cmake-ubuntu
-      - build-cmake-ubuntu-cublas
+      - build-cmake-linux
+      - build-cmake-linux-cublas
       - build-cmake-windows
       - build-cmake-windows-cublas
       - build-cmake-macOS
@@ -227,12 +227,12 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: build-cmake-ubuntu-${{env.LLAMA-TAG}}-${{ github.sha }}
-          path: ./build-cmake-ubuntu
+          name: build-cmake-linux-${{env.LLAMA-TAG}}-${{ github.sha }}
+          path: ./build-cmake-linux
       - uses: actions/download-artifact@v4
         with:
-          name: build-cmake-ubuntu-cublas-${{env.LLAMA-TAG}}-${{ github.sha }}
-          path: ./build-cmake-ubuntu-cublas
+          name: build-cmake-linux-cublas-${{env.LLAMA-TAG}}-${{ github.sha }}
+          path: ./build-cmake-linux-cublas
       - uses: actions/download-artifact@v4
         with:
           name: build-cmake-windows-${{env.LLAMA-TAG}}-${{ github.sha }}
@@ -252,9 +252,70 @@ jobs:
 
       - name: Upload
         run: |
-          ./mc cp ./build-cmake-ubuntu/server             r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/linux-x86-64
-          ./mc cp ./build-cmake-ubuntu-cublas/server      r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/linux-x86-64-cublas
+          ./mc cp ./build-cmake-linux/server              r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/linux-x86-64
+          ./mc cp ./build-cmake-linux-cublas/server       r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/linux-x86-64-cublas
           ./mc cp ./build-cmake-windows/server.exe        r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/windows-x86-64
           ./mc cp ./build-cmake-windows-cublas/server.exe r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/windows-x86-64-cublas
           ./mc cp ./build-cmake-macOS/server              r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/macOS-x86-64
           ./mc cp ./build-cmake-macOS-metal/server        r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/macOS-x86-64-metal
+      - name: Create version spec
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const crypto = require("crypto");
+
+            const s3Path = 'https://pub-ad9e0b7360bc4259878d0f81b89c5405.r2.dev/${{ github.sha }}/${{env.LLAMA-TAG}}';
+
+            const getCheckSum = (path) => {
+              const file = fs.readFileSync(path);
+
+              const hash = crypto.createHash("sha256").update(file).digest("hex");
+
+              return hash;
+            };
+
+            const spec = {
+              linux: {
+                "x86-64": {
+                  cpu: {
+                    checksum: getCheckSum("./build-cmake-linux/server"),
+                    url: s3Path + 'linux-x86-64',
+                  },
+                  cublas: {
+                    checksum: getCheckSum("./build-cmake-linux-cublas/server"),
+                    url: s3Path + 'linux-x86-64-cublas'
+                  },
+                }
+              },
+              win32: {
+                "x86-64": {
+                  cpu: {
+                    checksum: getCheckSum("./build-cmake-windows/server.exe"),
+                    url: s3Path + 'windows-x86-64',
+                  },
+                  cublas: {
+                    checksum: getCheckSum("./build-cmake-windows-cublas/server.exe"),
+                    url: s3Path + 'windows-x86-64-cublas'
+                  },
+                }
+              },
+              darwin: {
+                "x86-64": {
+                  cpu: {
+                    checksum: getCheckSum("./build-cmake-macOS/server"),
+                    url: s3Path + 'macOS-x86-64',
+                  },
+                  cublas: {
+                    checksum: getCheckSum("./build-cmake-macOS-metal/server"),
+                    url: s3Path + 'macOS-x86-64-metal'
+                  },
+                }
+              }
+            };
+
+            fs.writeFileSync('spec.json', JSON.stringify(spec));
+
+      - name: Upload spec
+        run: |
+          ./mc cp ./spec.json r2/${{secrets.AWS_BUCKET}}/spec.json
