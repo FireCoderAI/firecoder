@@ -254,9 +254,9 @@ jobs:
 
       - name: Upload
         run: |
-          ./mc cp ./build-cmake-ubuntu/server         r2/${{secrets.AWS_BUCKET}}/linux-x86-64-${{env.LLAMA-TAG}}
-          ./mc cp ./build-cmake-ubuntu-cublas/server  r2/${{secrets.AWS_BUCKET}}/linux-x86-64-cublas-${{env.LLAMA-TAG}}
-          ./mc cp ./build-cmake-windows/server        r2/${{secrets.AWS_BUCKET}}/windows-x86-64-${{env.LLAMA-TAG}}
-          ./mc cp ./build-cmake-windows-cublas/server r2/${{secrets.AWS_BUCKET}}/windows-x86-64-cublas-${{env.LLAMA-TAG}}
-          ./mc cp ./build-cmake-macOS/server          r2/${{secrets.AWS_BUCKET}}/macOS-x86-64-${{env.LLAMA-TAG}}
-          ./mc cp ./build-cmake-macOS-metal/server    r2/${{secrets.AWS_BUCKET}}/macOS-x86-64-metal-${{env.LLAMA-TAG}}
+          ./mc cp ./build-cmake-ubuntu/server         r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/linux-x86-64
+          ./mc cp ./build-cmake-ubuntu-cublas/server  r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/linux-x86-64-cublas
+          ./mc cp ./build-cmake-windows/server        r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/windows-x86-64
+          ./mc cp ./build-cmake-windows-cublas/server r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/windows-x86-64-cublas
+          ./mc cp ./build-cmake-macOS/server          r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/macOS-x86-64
+          ./mc cp ./build-cmake-macOS-metal/server    r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/macOS-x86-64-metal
