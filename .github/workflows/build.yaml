@@ -197,8 +197,8 @@ jobs:
       - name: Install minio
         run: |
           wget https://dl.min.io/client/mc/release/linux-amd64/mc
-          chmod +x mc
-          mc alias set r2 ${{ secrets.AWS_ENDPOINT }} ${{ secrets.AWS_KEY_ID }} ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          chmod +x ./mc
+          ./mc alias set r2 ${{ secrets.AWS_ENDPOINT }} ${{ secrets.AWS_KEY_ID }} ${{ secrets.AWS_SECRET_ACCESS_KEY}}
 
       - uses: actions/download-artifact@v4
         with:
@@ -206,4 +206,4 @@ jobs:
           path: ./build-cmake-ubuntu
       - run: ls -lha
       - name: Upload
-        run: mc cp ./build-cmake-ubuntu r2/${{secrets.AWS_BUCKET}}
+        run: ./mc cp ./build-cmake-ubuntu r2/${{secrets.AWS_BUCKET}}
