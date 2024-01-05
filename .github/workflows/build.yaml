@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: "ggerganov/llama.cpp"
-          ref: github.event.inputs.llama-tag
+          ref: "b1768"
       - name: Install dependencies
         run: |
           sudo apt-get update
