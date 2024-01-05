@@ -44,13 +44,22 @@ jobs:
       - run: ls -lha ./build/bin/server
       - run: pwd
       - name: Upload server
-        uses: shallwefootball/upload-s3-action@master
+        uses: lovellfelix/minio-deploy-action@v1
         with:
-          aws_key_id: ${{ secrets.AWS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          aws_bucket: ${{ secrets.AWS_BUCKET }}
           endpoint: ${{ secrets.AWS_ENDPOINT }}
+          access_key: ${{ secrets.AWS_KEY_ID }}
+          secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          bucket: ${{ secrets.AWS_BUCKET }}
+          # Optional inputs with their defaults:
           source_dir: "build/bin/server"
+          target_dir: "/"
+        # uses: shallwefootball/upload-s3-action@master
+        # with:
+        #   aws_key_id: ${{ secrets.AWS_KEY_ID }}
+        #   aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+        #   aws_bucket: ${{ secrets.AWS_BUCKET }}
+        #   endpoint: ${{ secrets.AWS_ENDPOINT }}
+        #   source_dir: "build/bin/server"
 
   build-cmake-ubuntu-cublas:
     runs-on: ubuntu-latest
