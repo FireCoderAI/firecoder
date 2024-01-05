@@ -43,23 +43,12 @@ jobs:
       - run: ls -lha ./build
       - run: ls -lha ./build/bin/server
       - run: pwd
-      - name: Upload server
-        uses: lovellfelix/minio-deploy-action@v1
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
         with:
-          endpoint: ${{ secrets.AWS_ENDPOINT }}
-          access_key: ${{ secrets.AWS_KEY_ID }}
-          secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          bucket: ${{ secrets.AWS_BUCKET }}
-          # Optional inputs with their defaults:
-          source_dir: "build/bin/server"
-          target_dir: "/"
-        # uses: shallwefootball/upload-s3-action@master
-        # with:
-        #   aws_key_id: ${{ secrets.AWS_KEY_ID }}
-        #   aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-        #   aws_bucket: ${{ secrets.AWS_BUCKET }}
-        #   endpoint: ${{ secrets.AWS_ENDPOINT }}
-        #   source_dir: "build/bin/server"
+          name: build-cmake-ubuntu-${{env.LLAMA-TAG}}-${{ github.sha }}
+          path: build/bin/server
+          retention-days: 1
 
   build-cmake-ubuntu-cublas:
     runs-on: ubuntu-latest
@@ -198,3 +187,23 @@ jobs:
           cd build
           cmake ..
           cmake --build . --config Release --parallel $(sysctl -n hw.logicalcpu)
+
+  upload-server:
+    runs-on: ubuntu-latest
+    needs:
+      - build-cmake-ubuntu
+
+    steps:
+      - name: Install minio
+        run: |
+          wget https://dl.min.io/client/mc/release/linux-amd64/mc
+          chmod +x mc
+          mc alias set r2 ${{ secrets.AWS_ENDPOINT }} ${{ secrets.AWS_KEY_ID }} ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-cmake-ubuntu-${{env.LLAMA-TAG}}-${{ github.sha }}
+          path: ./build-cmake-ubuntu
+      - run: ls -lha
+      - name: Upload
+        run: mc cp ./build-cmake-ubuntu r2/${{secrets.AWS_BUCKET}}
