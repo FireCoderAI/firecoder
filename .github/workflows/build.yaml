@@ -100,21 +100,17 @@ jobs:
           cd build
           cmake .. -DBUILD_SHARED_LIBS=ON -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF
           cmake --build . --config Release --parallel ${env:NUMBER_OF_PROCESSORS}
+
       - name: Test
         run: |
           cd build
           ctest -C Release --verbose --timeout 900
 
-      - run: |
-          ls 
-          ls build
-          ls build/bin
-          ls build/bin/Release
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: build-cmake-windows-${{env.LLAMA-TAG}}-${{ github.sha }}
-          path: build/bin/server
+          path: build/bin/Release/server.exe
           retention-days: 1
 
   build-cmake-windows-cublas:
@@ -145,7 +141,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-cmake-windows-cublas-${{env.LLAMA-TAG}}-${{ github.sha }}
-          path: build/bin/server
+          path: build/bin/Release/server.exe
           retention-days: 1
 
   build-cmake-macOS:
@@ -256,9 +252,9 @@ jobs:
 
       - name: Upload
         run: |
-          ./mc cp ./build-cmake-ubuntu/server         r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/linux-x86-64
-          ./mc cp ./build-cmake-ubuntu-cublas/server  r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/linux-x86-64-cublas
-          ./mc cp ./build-cmake-windows/server        r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/windows-x86-64
-          ./mc cp ./build-cmake-windows-cublas/server r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/windows-x86-64-cublas
-          ./mc cp ./build-cmake-macOS/server          r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/macOS-x86-64
-          ./mc cp ./build-cmake-macOS-metal/server    r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/macOS-x86-64-metal
+          ./mc cp ./build-cmake-ubuntu/server             r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/linux-x86-64
+          ./mc cp ./build-cmake-ubuntu-cublas/server      r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/linux-x86-64-cublas
+          ./mc cp ./build-cmake-windows/server.exe        r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/windows-x86-64
+          ./mc cp ./build-cmake-windows-cublas/server.exe r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/windows-x86-64-cublas
+          ./mc cp ./build-cmake-macOS/server              r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/macOS-x86-64
+          ./mc cp ./build-cmake-macOS-metal/server        r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/macOS-x86-64-metal
