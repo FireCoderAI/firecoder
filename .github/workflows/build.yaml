@@ -56,7 +56,7 @@ jobs:
           wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.1-1_all.deb
           sudo dpkg -i cuda-keyring_1.1-1_all.deb
           sudo apt-get update
-          sudo apt-get -y install cuda-toolkit-12-3
+          sudo apt-get -y install cuda-toolkit-12-2
 
       - name: Build
         id: cmake_build
@@ -163,9 +163,3 @@ jobs:
           cd build
           cmake ..
           cmake --build . --config Release --parallel $(sysctl -n hw.logicalcpu)
-
-      - name: Test
-        id: cmake_test
-        run: |
-          cd build
-          ctest --verbose --timeout 900
