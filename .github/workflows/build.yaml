@@ -109,6 +109,7 @@ jobs:
           ls 
           ls build
           ls build/bin
+          ls build/bin/Release
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
