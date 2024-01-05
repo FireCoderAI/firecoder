@@ -44,13 +44,19 @@ jobs:
           sudo apt-get update
           sudo apt-get install build-essential
 
+      # - name: Install cuda-toolkit
+      #   uses: Jimver/cuda-toolkit@v0.2.11
+      #   with:
+      #     cuda: "12.2.0"
+      #     method: "network"
+      #     sub-packages: '["nvcc", "cudart"]'
+      #     non-cuda-sub-packages: '["libcublas", "libcublas-dev", "cuda-toolkit"]'
       - name: Install cuda-toolkit
-        uses: Jimver/cuda-toolkit@v0.2.11
-        with:
-          cuda: "12.2.0"
-          method: "network"
-          sub-packages: '["nvcc", "cudart"]'
-          non-cuda-sub-packages: '["libcublas", "libcublas-dev", "cuda-toolkit"]'
+        run: |
+          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.1-1_all.deb
+          sudo dpkg -i cuda-keyring_1.1-1_all.deb
+          sudo apt-get update
+          sudo apt-get -y install cuda-toolkit-12-3
 
       - name: Build
         id: cmake_build
@@ -128,6 +134,34 @@ jobs:
           mkdir build
           cd build
           cmake -DLLAMA_METAL=OFF ..
+          cmake --build . --config Release --parallel $(sysctl -n hw.logicalcpu)
+
+      - name: Test
+        id: cmake_test
+        run: |
+          cd build
+          ctest --verbose --timeout 900
+  build-cmake-macOS-metal:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: "ggerganov/llama.cpp"
+          ref: "b1732"
+
+      - name: Install dependencies
+        run: |
+          brew update
+
+      - name: Build
+        id: cmake_build
+        run: |
+          sysctl -a
+          mkdir build
+          cd build
+          cmake ..
           cmake --build . --config Release --parallel $(sysctl -n hw.logicalcpu)
 
       - name: Test
