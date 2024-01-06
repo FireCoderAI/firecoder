@@ -98,7 +98,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DBUILD_SHARED_LIBS=ON -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF
+          cmake .. -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF -DLLAMA_STATIC=ON
           cmake --build . --config Release --parallel ${env:NUMBER_OF_PROCESSORS}
 
       - name: Test
@@ -134,7 +134,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DBUILD_SHARED_LIBS=ON -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF -DLLAMA_CUBLAS=ON
+          cmake .. -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF -DLLAMA_CUBLAS=ON -DLLAMA_STATIC=ON
           cmake --build . --config Release --parallel ${env:NUMBER_OF_PROCESSORS}
 
       - name: Upload Artifact
