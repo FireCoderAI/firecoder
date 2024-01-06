@@ -10,10 +10,10 @@ on:
         description: "llama.cpp tag"
         required: true
         type: string
-        default: "b1768"
+        default: "b1775"
 
 env:
-  LLAMA-TAG: "b1768"
+  LLAMA-TAG: "b1775"
 
 jobs:
   build-cmake-linux:
