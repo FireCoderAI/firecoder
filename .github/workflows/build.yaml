@@ -313,7 +313,7 @@ jobs:
                 }
               }
             };
-
+            console.log(JSON.stringify(spec, null, 2))
             fs.writeFileSync('spec.json', JSON.stringify(spec));
 
       - name: Upload spec
