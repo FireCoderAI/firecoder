@@ -1,49 +1,41 @@
 import path from "node:path";
 import fs from "node:fs";
 import fsPromise from "node:fs/promises";
-import crypto from "node:crypto";
+import * as os from "node:os";
 import { Readable, Transform } from "node:stream";
 import { finished } from "node:stream/promises";
 import { ReadableStream } from "node:stream/web";
-import { homedir } from "node:os";
-import { createProgress } from "../common/utils/progress";
+import { createProgress } from "../utils/progress";
+import { formatBytes } from "../utils/formatBytes";
+import { checkFileOrFolderExists, getChecksum, getSaveFolder } from "./utils";
 
-const checkFileOrFolderExists = async (pathToCheck: string) => {
-  try {
-    await fsPromise.access(pathToCheck, fs.constants.F_OK);
-    return true;
-  } catch (error) {
-    return false;
-  }
-};
+interface ResourceInfo {
+  url: string;
+  checksum: string;
+}
 
-const getSaveFolder = async () => {
-  const pathSaveFolder = path.join(homedir(), ".firecoder");
+interface Spec {
+  linux: {
+    "x86-64": {
+      cpu: ResourceInfo;
+      cublas: ResourceInfo;
+    };
+  };
+  win32: {
+    "x86-64": {
+      cpu: ResourceInfo;
+      cublas: ResourceInfo;
+    };
+  };
+  darwin: {
+    "x86-64": {
+      cpu: ResourceInfo;
+      metal: ResourceInfo;
+    };
+  };
+}
 
-  const folderIsExist = await checkFileOrFolderExists(pathSaveFolder);
-
-  if (folderIsExist === false) {
-    await fsPromise.mkdir(pathSaveFolder);
-  }
-
-  return pathSaveFolder;
-};
-
-const formatBytes = (bytes: number, decimals = 2) => {
-  if (!+bytes) {
-    return "0 Bytes";
-  }
-
-  const k = 1000;
-  const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ["Bytes", "KB", "MB", "GB", "TiB", "PiB", "EiB", "ZiB", "YiB"];
-
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
-};
-
-const downloadFile = async (
+const downloadFileWithProgress = async (
   url: string,
   path: string,
   title: string,
@@ -78,47 +70,41 @@ const downloadFile = async (
   progress.finishProgress();
 };
 
-export const getCheckSum = async (path: string) => {
-  const file = await fsPromise.readFile(path);
+const getServerInfo = async (): Promise<ResourceInfo | null> => {
+  const osplatform = os.platform();
+  const osmachine = os.machine();
 
-  const hash = crypto.createHash("sha256").update(file).digest("hex");
+  const response = await fetch(
+    "https://pub-ad9e0b7360bc4259878d0f81b89c5405.r2.dev/spec.json"
+  );
 
-  return hash;
-};
-
-export const getServerUrl = async (
-  os: NodeJS.Platform
-): Promise<{
-  url: string;
-  checksum: string;
-} | null> => {
-  // TODO: get latest version
-  if (os === "win32") {
-    return {
-      url: "https://pub-ad9e0b7360bc4259878d0f81b89c5405.r2.dev/server.exe",
-      checksum:
-        "0a4c8e50c56f7a7c9d267e3e5f44115685e46e4a5f50456e6b28a23dbb46dcce",
-    };
-  }
-  if (os === "linux") {
-    return {
-      url: "https://pub-ad9e0b7360bc4259878d0f81b89c5405.r2.dev/server",
-      checksum:
-        "2d242c88534a53f8576bf06f9afe23a2211d9a9424f6ef860047cb36d0db0956",
-    };
-  }
-
-  if (os === "darwin") {
+  if (!response.ok) {
     return null;
+  }
+
+  const spec = (await response.json()) as Spec;
+
+  if (osplatform === "win32") {
+    if (osmachine === "x86_64") {
+      return spec["win32"]["x86-64"]["cpu"];
+    }
+  }
+  if (osplatform === "linux") {
+    if (osmachine === "x86_64") {
+      return spec["linux"]["x86-64"]["cpu"];
+    }
+  }
+
+  if (osplatform === "darwin") {
+    if (osmachine === "x86_64") {
+      return spec["darwin"]["x86-64"]["cpu"];
+    }
   }
 
   return null;
 };
 
-export const getModelUrl = async (): Promise<{
-  url: string;
-  checksum: string;
-} | null> => {
+const getModelInfo = async (): Promise<ResourceInfo | null> => {
   // TODO: get latest version
   return {
     url: "https://pub-ad9e0b7360bc4259878d0f81b89c5405.r2.dev/deepseek-coder-1.3b-base.Q8_0.gguf",
@@ -128,16 +114,16 @@ export const getModelUrl = async (): Promise<{
 };
 
 export const downloadServer = async () => {
-  const os = process.platform;
+  const osplatform = os.platform();
 
   const pathToSave = await getSaveFolder();
 
   const serverPath = path.join(
     pathToSave,
-    "server" + (os === "win32" ? ".exe" : "")
+    "server" + (osplatform === "win32" ? ".exe" : "")
   );
 
-  const serverFileInfo = await getServerUrl(os);
+  const serverFileInfo = await getServerInfo();
 
   if (serverFileInfo === null) {
     // TODO: throw error
@@ -146,9 +132,9 @@ export const downloadServer = async () => {
 
   const isExists = await checkFileOrFolderExists(serverPath);
   if (isExists) {
-    const checkSum = await getCheckSum(serverPath);
+    const checksum = await getChecksum(serverPath);
 
-    if (checkSum === serverFileInfo.checksum) {
+    if (checksum === serverFileInfo.checksum) {
       return serverPath;
     }
 
@@ -159,7 +145,7 @@ export const downloadServer = async () => {
     await fsPromise.unlink(serverPath);
   }
 
-  await downloadFile(
+  await downloadFileWithProgress(
     serverFileInfo.url,
     serverPath,
     "Downloading server",
@@ -175,7 +161,7 @@ export const downloadModel = async () => {
 
   const modelPath = path.join(pathToSave, "model.gguf");
 
-  const modelFileInfo = await getModelUrl();
+  const modelFileInfo = await getModelInfo();
 
   if (modelFileInfo === null) {
     // TODO: throw error
@@ -185,9 +171,9 @@ export const downloadModel = async () => {
   const isExists = await checkFileOrFolderExists(modelPath);
 
   if (isExists) {
-    const checkSum = await getCheckSum(modelPath);
+    const checksum = await getChecksum(modelPath);
 
-    if (checkSum === modelFileInfo.checksum) {
+    if (checksum === modelFileInfo.checksum) {
       return modelPath;
     }
     console.log("Checksum model mismatch");
@@ -197,7 +183,7 @@ export const downloadModel = async () => {
     await fsPromise.unlink(modelPath);
   }
 
-  await downloadFile(
+  await downloadFileWithProgress(
     modelFileInfo.url,
     modelPath,
     "Downloading model",

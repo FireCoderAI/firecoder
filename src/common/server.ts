@@ -1,5 +1,5 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
-import { downloadModel, downloadServer } from "../download";
+import { downloadModel, downloadServer } from "./download";
 import Logger from "./logger";
 import statusBar from "./statusBar";
 
