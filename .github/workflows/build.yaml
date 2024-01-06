@@ -35,7 +35,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DBUILD_SHARED_LIBS=ON -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF
+          cmake .. -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF
           cmake --build . --config Release --parallel $(nproc)
 
       - name: Test
@@ -306,7 +306,7 @@ jobs:
                     checksum: getCheckSum("./build-cmake-macOS/server"),
                     url: s3Path + 'macOS-x86-64',
                   },
-                  cublas: {
+                  metal: {
                     checksum: getCheckSum("./build-cmake-macOS-metal/server"),
                     url: s3Path + 'macOS-x86-64-metal'
                   },
