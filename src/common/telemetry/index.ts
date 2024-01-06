@@ -17,6 +17,7 @@ type Properties = {
   osrelease: string;
   osplatform: NodeJS.Platform;
   osarchitecture: string;
+  osmachine: string;
   oscpu: string;
   osram: string;
 };
@@ -65,6 +66,7 @@ class Telemetry {
       osrelease: os.release(),
       osplatform: os.platform(),
       osarchitecture: os.arch(),
+      osmachine: os.machine(),
       oscpu: os.cpus()?.[0]?.model,
       osram: String(os.totalmem()),
     };
