@@ -35,7 +35,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF
+          cmake .. -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF -DLLAMA_STATIC=ON
           cmake --build . --config Release --parallel $(nproc)
 
       - name: Test
@@ -74,7 +74,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF -DLLAMA_CUBLAS=ON
+          cmake .. -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF -DLLAMA_CUBLAS=ON -DLLAMA_STATIC=ON
           cmake --build . --config Release --parallel $(nproc)
 
       - name: Upload Artifact
