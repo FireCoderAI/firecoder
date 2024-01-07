@@ -1,9 +1,6 @@
 name: Build Server
 
 on:
-  push:
-    branches:
-      - "add-ci"
   workflow_dispatch:
     inputs:
       llama-tag:
@@ -11,9 +8,6 @@ on:
         required: true
         type: string
         default: "b1775"
-
-env:
-  LLAMA-TAG: "b1775"
 
 jobs:
   build-cmake-linux:
@@ -24,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: "ggerganov/llama.cpp"
-          ref: ${{ env.LLAMA-TAG }}
+          ref: ${{ inputs.llama-tag }}
 
       - name: Install dependencies
         run: |
@@ -46,7 +40,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-cmake-linux-${{env.LLAMA-TAG}}-${{ github.sha }}
+          name: build-cmake-linux-${{inputs.llama-tag}}-${{ github.sha }}
           path: build/bin/server
           retention-days: 1
 
@@ -58,7 +52,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: "ggerganov/llama.cpp"
-          ref: ${{ env.LLAMA-TAG }}
+          ref: ${{ inputs.llama-tag }}
 
       - name: Install dependencies
         run: |
@@ -80,7 +74,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-cmake-linux-cublas-${{env.LLAMA-TAG}}-${{ github.sha }}
+          name: build-cmake-linux-cublas-${{inputs.llama-tag}}-${{ github.sha }}
           path: build/bin/server
           retention-days: 1
 
@@ -92,7 +86,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: "ggerganov/llama.cpp"
-          ref: ${{ env.LLAMA-TAG }}
+          ref: ${{ inputs.llama-tag }}
 
       - name: Build
         run: |
@@ -109,7 +103,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-cmake-windows-${{env.LLAMA-TAG}}-${{ github.sha }}
+          name: build-cmake-windows-${{inputs.llama-tag}}-${{ github.sha }}
           path: build/bin/Release/server.exe
           retention-days: 1
 
@@ -121,7 +115,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: "ggerganov/llama.cpp"
-          ref: ${{ env.LLAMA-TAG }}
+          ref: ${{ inputs.llama-tag }}
 
       - name: Install cuda-toolkit
         uses: Jimver/cuda-toolkit@v0.2.11
@@ -140,7 +134,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-cmake-windows-cublas-${{env.LLAMA-TAG}}-${{ github.sha }}
+          name: build-cmake-windows-cublas-${{inputs.llama-tag}}-${{ github.sha }}
           path: build/bin/Release/server.exe
           retention-days: 1
 
@@ -152,7 +146,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: "ggerganov/llama.cpp"
-          ref: ${{ env.LLAMA-TAG }}
+          ref: ${{ inputs.llama-tag }}
 
       - name: Install dependencies
         run: |
@@ -175,7 +169,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-cmake-macOS-${{env.LLAMA-TAG}}-${{ github.sha }}
+          name: build-cmake-macOS-${{inputs.llama-tag}}-${{ github.sha }}
           path: build/bin/server
           retention-days: 1
 
@@ -187,7 +181,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: "ggerganov/llama.cpp"
-          ref: ${{ env.LLAMA-TAG }}
+          ref: ${{ inputs.llama-tag }}
 
       - name: Install dependencies
         run: |
@@ -204,7 +198,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-cmake-macOS-metal-${{env.LLAMA-TAG}}-${{ github.sha }}
+          name: build-cmake-macOS-metal-${{inputs.llama-tag}}-${{ github.sha }}
           path: build/bin/server
           retention-days: 1
 
@@ -227,37 +221,37 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: build-cmake-linux-${{env.LLAMA-TAG}}-${{ github.sha }}
+          name: build-cmake-linux-${{inputs.llama-tag}}-${{ github.sha }}
           path: ./build-cmake-linux
       - uses: actions/download-artifact@v4
         with:
-          name: build-cmake-linux-cublas-${{env.LLAMA-TAG}}-${{ github.sha }}
+          name: build-cmake-linux-cublas-${{inputs.llama-tag}}-${{ github.sha }}
           path: ./build-cmake-linux-cublas
       - uses: actions/download-artifact@v4
         with:
-          name: build-cmake-windows-${{env.LLAMA-TAG}}-${{ github.sha }}
+          name: build-cmake-windows-${{inputs.llama-tag}}-${{ github.sha }}
           path: ./build-cmake-windows
       - uses: actions/download-artifact@v4
         with:
-          name: build-cmake-windows-cublas-${{env.LLAMA-TAG}}-${{ github.sha }}
+          name: build-cmake-windows-cublas-${{inputs.llama-tag}}-${{ github.sha }}
           path: ./build-cmake-windows-cublas
       - uses: actions/download-artifact@v4
         with:
-          name: build-cmake-macOS-${{env.LLAMA-TAG}}-${{ github.sha }}
+          name: build-cmake-macOS-${{inputs.llama-tag}}-${{ github.sha }}
           path: ./build-cmake-macOS
       - uses: actions/download-artifact@v4
         with:
-          name: build-cmake-macOS-metal-${{env.LLAMA-TAG}}-${{ github.sha }}
+          name: build-cmake-macOS-metal-${{inputs.llama-tag}}-${{ github.sha }}
           path: ./build-cmake-macOS-metal
 
       - name: Upload
         run: |
-          ./mc cp ./build-cmake-linux/server              r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/linux-x86-64
-          ./mc cp ./build-cmake-linux-cublas/server       r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/linux-x86-64-cublas
-          ./mc cp ./build-cmake-windows/server.exe        r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/windows-x86-64
-          ./mc cp ./build-cmake-windows-cublas/server.exe r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/windows-x86-64-cublas
-          ./mc cp ./build-cmake-macOS/server              r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/macOS-x86-64
-          ./mc cp ./build-cmake-macOS-metal/server        r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{env.LLAMA-TAG}}/macOS-x86-64-metal
+          ./mc cp ./build-cmake-linux/server              r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{inputs.llama-tag}}/linux-x86-64
+          ./mc cp ./build-cmake-linux-cublas/server       r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{inputs.llama-tag}}/linux-x86-64-cublas
+          ./mc cp ./build-cmake-windows/server.exe        r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{inputs.llama-tag}}/windows-x86-64
+          ./mc cp ./build-cmake-windows-cublas/server.exe r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{inputs.llama-tag}}/windows-x86-64-cublas
+          ./mc cp ./build-cmake-macOS/server              r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{inputs.llama-tag}}/macOS-x86-64
+          ./mc cp ./build-cmake-macOS-metal/server        r2/${{secrets.AWS_BUCKET}}/${{ github.sha }}/${{inputs.llama-tag}}/macOS-x86-64-metal
       - name: Create version spec
         uses: actions/github-script@v7
         with:
@@ -265,7 +259,7 @@ jobs:
             const fs = require('fs');
             const crypto = require("crypto");
 
-            const s3Path = 'https://pub-ad9e0b7360bc4259878d0f81b89c5405.r2.dev/${{ github.sha }}/${{env.LLAMA-TAG}}/';
+            const s3Path = 'https://pub-ad9e0b7360bc4259878d0f81b89c5405.r2.dev/${{ github.sha }}/${{inputs.llama-tag}}/';
 
             const getCheckSum = (path) => {
               const file = fs.readFileSync(path);
