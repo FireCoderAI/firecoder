@@ -4,6 +4,8 @@ src/**
 .gitignore
 .yarnrc
 vsc-extension-quickstart.md
+node_modules
+.github
 **/tsconfig.json
 **/.eslintrc.json
 **/*.map
