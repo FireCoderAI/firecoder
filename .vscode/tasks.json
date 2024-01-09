@@ -6,8 +6,8 @@
     {
       "label": "build",
       "type": "npm",
-      "script": "esbuild-watch",
-      "problemMatcher": "$esbuild",
+      "script": "watch",
+      "problemMatcher": "$tsc-watch",
       "isBackground": true,
       "presentation": {
         "reveal": "never"

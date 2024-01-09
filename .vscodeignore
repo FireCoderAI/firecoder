@@ -11,4 +11,4 @@ node_modules
 **/*.map
 **/*.ts
 model.gguf
-server
+./server

@@ -4,4 +4,4 @@ node_modules
 .vscode-test/
 *.vsix
 model.gguf
-server
+./server
