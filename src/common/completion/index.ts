@@ -17,7 +17,7 @@ const logCompletion = () => {
 
 export const getInlineCompletionProvider = () => {
   let maxToken = 50;
-  let expectedTime = 1500;
+  let expectedTime = 1000;
   const provider: vscode.InlineCompletionItemProvider = {
     provideInlineCompletionItems: async (
       document,
@@ -25,6 +25,9 @@ export const getInlineCompletionProvider = () => {
       context,
       token
     ) => {
+      if (context.selectedCompletionInfo) {
+        return;
+      }
       const loggerCompletion = logCompletion();
 
       loggerCompletion.info("Completion started");
@@ -70,6 +73,7 @@ export const getInlineCompletionProvider = () => {
         TelemetryInstance.sendTelemetryEvent("Start request");
 
         const startTime = performance.now();
+
         const res = await fetch("http://localhost:39129/completion", {
           body: JSON.stringify(body),
           method: "POST",
@@ -82,9 +86,7 @@ export const getInlineCompletionProvider = () => {
           vscode.window.showErrorMessage(
             `Error: ${res.status} ${res.statusText}`
           );
-          return {
-            items,
-          };
+          return;
         }
 
         const json: {
@@ -107,8 +109,6 @@ export const getInlineCompletionProvider = () => {
           return;
         }
 
-        // Logger.debug(body, "Completion request");
-
         if (json.content !== "") {
           items.push({
             insertText: json.content,
@@ -122,9 +122,13 @@ export const getInlineCompletionProvider = () => {
             `PP: ${json?.timings?.prompt_per_second?.toFixed(2)}; [t/s] ` +
             `TG: ${json?.timings?.predicted_per_second?.toFixed(2)}; [t/s]`
         );
-        // Logger.debug(json, "Completion response json");
 
-        maxToken *= expectedTime / (performance.now() - startTime);
+        maxToken *=
+          expectedTime /
+          (json?.timings?.prompt_ms
+            ? json?.timings?.prompt_ms
+            : performance.now() - startTime);
+
         loggerCompletion.info(`maxToken: ${maxToken}`);
 
         loggerCompletion.info("Completion finish");

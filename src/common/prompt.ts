@@ -13,6 +13,7 @@ const tokenize = async (text: string) => {
         Connection: "keep-alive",
         "Content-Type": "application/json",
       },
+      keepalive: true,
     });
 
     const json = (await res.json()) as {
@@ -34,6 +35,7 @@ export const getPrompt = async (
   const maxTokenHardLimit = 500;
   const maxToken =
     maxTokenExpect > maxTokenHardLimit ? maxTokenHardLimit : maxTokenExpect;
+
   const textBefore = document.getText(
     new vscode.Range(new vscode.Position(0, 0), position)
   );
@@ -63,18 +65,18 @@ export const getPrompt = async (
     ]);
     Logger.endPerfMarker("Prepare prompt request");
 
-    const resTokens = tokensAfterSlice + tokensBeforeSlice;
+    const resToken = tokensAfterSlice + tokensBeforeSlice;
     if (
-      resTokens >= maxToken ||
+      resToken >= maxToken ||
       (textBeforeSlice.length >= textBefore.length &&
         textAfterSlice.length >= textAfter.length)
     ) {
-      Logger.info(`Tokens count: ${resTokens}`);
+      Logger.info(`Tokens count: ${resToken}`);
       break;
     }
 
-    before = Number((before * (maxToken / resTokens)).toFixed(0)) + 5;
-    after = Number((after * (maxToken / resTokens)).toFixed(0)) + 5;
+    before = Number((before * (maxToken / resToken)).toFixed(0)) + 5;
+    after = Number((after * (maxToken / resToken)).toFixed(0)) + 5;
   }
   Logger.endPerfMarker("Prepare prompt");
 
