@@ -41,12 +41,12 @@
       {
         "key": "alt+\\",
         "command": "firecoder.inlineSuggest",
-        "mac": "ctrl+o"
+        "mac": "ctrl+enter"
       },
       {
         "key": "ctrl+enter",
         "command": "firecoder.inlineSuggest",
-        "mac": "ctrl+o"
+        "mac": "ctrl+enter"
       }
     ]
   },
