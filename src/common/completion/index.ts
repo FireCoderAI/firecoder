@@ -26,31 +26,31 @@ export const getInlineCompletionProvider = () => {
       token
     ) => {
       if (context.selectedCompletionInfo) {
-        return;
+        return [];
       }
       const loggerCompletion = logCompletion();
 
-      loggerCompletion.info("Completion started");
+      loggerCompletion.info("Completion: started");
 
       const cancelled = await delay(250, token);
       if (cancelled) {
-        loggerCompletion.info("Completion canceled");
-        return;
+        loggerCompletion.info("Completion: canceled");
+        return [];
       }
       const { abortController, requestFinish } = abortInterval(token);
 
-      const items: vscode.InlineCompletionItem[] = [];
       const prompt = await getPrompt(document, position, maxToken);
       const { stopTask } = statusBar.startTask();
 
-      const body = {
+      const parameters = {
         stream: false,
-        n_predict: 400,
+        n_predict: 128,
         temperature: 0.3,
         stop: ["\n"],
         repeat_last_n: 256,
         repeat_penalty: 1.18,
-        top_k: 40,
+        penalize_nl: true,
+        top_k: 20,
         top_p: 0.5,
         min_p: 0.05,
         tfs_z: 1,
@@ -68,78 +68,88 @@ export const getInlineCompletionProvider = () => {
         prompt: prompt,
       };
       try {
-        loggerCompletion.info("Start request");
-
+        loggerCompletion.info("Completion: processing; Request: started");
         TelemetryInstance.sendTelemetryEvent("Start request");
 
         const startTime = performance.now();
 
-        const res = await fetch("http://localhost:39129/completion", {
-          body: JSON.stringify(body),
+        const response = await fetch("http://localhost:39129/completion", {
+          body: JSON.stringify(parameters),
           method: "POST",
           signal: abortController.signal,
         });
 
-        if (!res.ok) {
-          Logger.error(res.statusText);
+        if (!response.ok) {
+          Logger.error(response.statusText);
 
           vscode.window.showErrorMessage(
-            `Error: ${res.status} ${res.statusText}`
+            `Error: ${response.status} ${response.statusText}`
           );
-          return;
+          return [];
         }
 
-        const json: {
+        const completion: {
           content: string;
           slot_id: number;
           timings: {
             predicted_ms: number;
+            predicted_n: number;
             predicted_per_second: number;
+            predicted_per_token_ms: number;
             prompt_ms: number;
+            prompt_n: number;
             prompt_per_second: number;
+            prompt_per_token_ms: number;
           };
-        } = (await res.json()) as any;
-
-        loggerCompletion.info("Finish request");
+        } = (await response.json()) as any;
 
         if (token.isCancellationRequested) {
           loggerCompletion.info(
-            "Request canceled by new completion cancel token"
+            "Completion: finish; Request: canceled by new completion cancel token"
           );
-          return;
+
+          return [];
         }
 
-        if (json.content !== "") {
-          items.push({
-            insertText: json.content,
-            range: new vscode.Range(position, position),
-          });
+        if (completion.content === "") {
+          loggerCompletion.info(
+            "Completion: finish; Request: canceled by empty content"
+          );
+          return [];
         }
 
         loggerCompletion.info(
-          `Slot Id: ${json.slot_id}; ` +
+          `Slot Id: ${completion.slot_id}; ` +
             `Total time: ${(performance.now() - startTime).toFixed(2)}; ` +
-            `PP: ${json?.timings?.prompt_per_second?.toFixed(2)}; [t/s] ` +
-            `TG: ${json?.timings?.predicted_per_second?.toFixed(2)}; [t/s]`
+            `PP: ${completion?.timings?.prompt_per_second?.toFixed(
+              2
+            )}; [t/s] ` +
+            `TG: ${completion?.timings?.predicted_per_second?.toFixed(
+              2
+            )}; [t/s]`
         );
 
         maxToken *=
           expectedTime /
-          (json?.timings?.prompt_ms
-            ? json?.timings?.prompt_ms
+          (completion?.timings?.prompt_ms
+            ? completion?.timings?.prompt_ms
             : performance.now() - startTime);
 
         loggerCompletion.info(`maxToken: ${maxToken}`);
 
         loggerCompletion.info("Completion finish");
-        return {
-          items,
-        };
+
+        return [
+          {
+            insertText: completion.content,
+            range: new vscode.Range(position, position),
+          },
+        ];
       } catch (error) {
         const Error = error as Error;
         if (Error.name === "AbortError") {
           loggerCompletion.info("Request canceled by new completion abort");
-          return;
+          return [];
         }
         Logger.error(error);
 

@@ -45,9 +45,10 @@ export const startServer = async () => {
       "--parallel",
       "4",
       "--ctx-size",
-      "2048",
+      "4096",
       "--cont-batching",
       "--embedding",
+      "--mlock",
     ],
     {
       detached: false,
