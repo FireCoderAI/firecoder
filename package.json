@@ -30,7 +30,26 @@
     "onStartupFinished"
   ],
   "main": "./out/extension.js",
-  "contributes": {},
+  "contributes": {
+    "commands": [
+      {
+        "command": "firecoder.inlineSuggest",
+        "title": "My Inline Completion Demo Settings"
+      }
+    ],
+    "keybindings": [
+      {
+        "key": "alt+\\",
+        "command": "firecoder.inlineSuggest",
+        "mac": "ctrl+o"
+      },
+      {
+        "key": "ctrl+enter",
+        "command": "firecoder.inlineSuggest",
+        "mac": "ctrl+o"
+      }
+    ]
+  },
   "scripts": {
     "vscode:prepublish": "rm -rf out && npm run esbuild-base -- --minify",
     "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --minify",

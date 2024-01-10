@@ -20,6 +20,16 @@ export async function activate(context: vscode.ExtensionContext) {
     InlineCompletionProvider
   );
 
+  const command = "firecoder.inlineSuggest";
+
+  const commandHandler = () => {
+    vscode.commands.executeCommand("editor.action.inlineSuggest.trigger");
+  };
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(command, commandHandler)
+  );
+
   Logger.info("Firecoder is ready.");
 }
 

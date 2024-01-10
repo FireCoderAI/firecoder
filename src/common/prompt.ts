@@ -32,7 +32,7 @@ export const getPrompt = async (
   position: vscode.Position,
   maxTokenExpect = 200
 ) => {
-  const maxTokenHardLimit = 500;
+  const maxTokenHardLimit = 1000;
   const maxToken =
     maxTokenExpect > maxTokenHardLimit ? maxTokenHardLimit : maxTokenExpect;
 
@@ -81,6 +81,6 @@ export const getPrompt = async (
   Logger.endPerfMarker("Prepare prompt");
 
   const prompt = `<｜fim▁begin｜>${textBeforeSlice}<｜fim▁hole｜>${textAfterSlice}<｜fim▁end｜>`;
-
+  console.log(prompt);
   return prompt;
 };
