@@ -15,7 +15,9 @@ const logCompletion = () => {
   };
 };
 
-export const getInlineCompletionProvider = () => {
+export const getInlineCompletionProvider = (
+  extensionContext: vscode.ExtensionContext
+) => {
   let maxToken = 50;
   let expectedTime = 1000;
   const provider: vscode.InlineCompletionItemProvider = {
@@ -27,6 +29,13 @@ export const getInlineCompletionProvider = () => {
     ) => {
       const triggerAuto =
         context.triggerKind === vscode.InlineCompletionTriggerKind.Automatic;
+      const currentInlineSuggestModeAuto = extensionContext.workspaceState.get(
+        "inlineSuggestModeAuto",
+        true
+      );
+      if (currentInlineSuggestModeAuto !== true && triggerAuto === true) {
+        return [];
+      }
       if (context.selectedCompletionInfo) {
         return [];
       }
