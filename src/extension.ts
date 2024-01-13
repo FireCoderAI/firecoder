@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import Logger from "./common/logger";
-import { startServer, stopServer } from "./common/server";
+import { servers } from "./common/server";
 import statusBar from "./common/statusBar";
 import { getInlineCompletionProvider } from "./common/completion";
 import { TelemetryInstance } from "./common/telemetry";
@@ -38,17 +38,18 @@ export async function activate(context: vscode.ExtensionContext) {
 
   statusBar.init(context);
 
-  await startServer();
-
-  const InlineCompletionProvider = getInlineCompletionProvider(context);
-  vscode.languages.registerInlineCompletionItemProvider(
-    { pattern: "**" },
-    InlineCompletionProvider
-  );
+  const serverSmallStarted = await servers["base-small"].startServer();
+  if (serverSmallStarted) {
+    const InlineCompletionProvider = getInlineCompletionProvider(context);
+    vscode.languages.registerInlineCompletionItemProvider(
+      { pattern: "**" },
+      InlineCompletionProvider
+    );
+  }
 
   Logger.info("Firecoder is ready.");
 }
 
 export function deactivate() {
-  stopServer();
+  servers["base-small"].stopServer();
 }

@@ -40,7 +40,8 @@ export const sendCompletion = async (
   prompt: string,
   parameters: Record<string, any>,
   abortController: AbortController,
-  uuid: string
+  uuid: string,
+  url: string
 ) => {
   const { stopTask } = statusBar.startTask();
 
@@ -57,7 +58,7 @@ export const sendCompletion = async (
 
     const startTime = performance.now();
 
-    const response = await fetch("http://localhost:39129/completion", {
+    const response = await fetch(`${url}/completion`, {
       body: JSON.stringify(parametersForCompletion),
       method: "POST",
       signal: abortController.signal,

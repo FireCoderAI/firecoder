@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 
 class StatusBar {
   private activeTasks: Set<string> = new Set();
+  private error: string | null = null;
   private statusBar: vscode.StatusBarItem | null = null;
   private workspaceState: vscode.Memento | null = null;
   public init(context: vscode.ExtensionContext) {
@@ -18,7 +19,7 @@ class StatusBar {
     this.setDefault();
     setInterval(() => {
       this.checkProgress();
-    }, 10);
+    }, 50);
   }
   public startTask() {
     const uuid = randomUUID();
@@ -34,11 +35,12 @@ class StatusBar {
   }
 
   public checkProgress() {
+    if (this.error !== null) {
+      return;
+    }
     if (this.activeTasks.size === 0) {
       if (this.statusBar !== null) {
-        this.statusBar.text = `$(${
-          this.getInlineSuggestMode() ? "check-all" : "check"
-        }) FireCoder`;
+        this.statusBar.text = `$(${this.getInlineSuggestModeIcon()}) FireCoder`;
         this.statusBar.tooltip = `Change inline suggest mode. Currect: ${
           this.getInlineSuggestMode() ? "Auto" : "Manually"
         }`;
@@ -53,6 +55,18 @@ class StatusBar {
     }
   }
 
+  public setError(tooltip: string) {
+    if (this.statusBar !== null) {
+      this.error = tooltip;
+      this.statusBar.text = `$(error) FireCoder`;
+      this.statusBar.tooltip = tooltip;
+      return () => {
+        this.error = null;
+        this.checkProgress();
+      };
+    }
+  }
+
   private getInlineSuggestMode() {
     if (this.workspaceState !== null) {
       const currentInlineSuggestModeAuto = this.workspaceState.get(
@@ -63,12 +77,17 @@ class StatusBar {
     }
     return true;
   }
+  private getInlineSuggestModeIcon() {
+    if (this.getInlineSuggestMode()) {
+      return "check-all";
+    } else {
+      return "check";
+    }
+  }
 
   private setDefault() {
     if (this.statusBar !== null) {
-      this.statusBar.text = `$(${
-        this.getInlineSuggestMode() ? "check-all" : "check"
-      }) FireCoder`;
+      this.statusBar.text = `$(${this.getInlineSuggestModeIcon()}) FireCoder`;
 
       this.statusBar.tooltip = `Change inline suggest mode. Currect: ${
         this.getInlineSuggestMode() ? "Auto" : "Manually"

@@ -1,12 +1,12 @@
 import * as vscode from "vscode";
 import Logger from "./logger";
 
-const tokenize = async (text: string) => {
+const tokenize = async (text: string, url: string) => {
   try {
     const body = JSON.stringify({
       content: text,
     });
-    const res = await fetch("http://localhost:39129/tokenize", {
+    const res = await fetch(`${url}/tokenize`, {
       body: body,
       method: "POST",
       headers: {
@@ -22,7 +22,6 @@ const tokenize = async (text: string) => {
 
     return json.tokens.length;
   } catch (error) {
-    debugger;
     return 0;
   }
 };
@@ -30,7 +29,8 @@ const tokenize = async (text: string) => {
 export const getPrompt = async (
   document: vscode.TextDocument,
   position: vscode.Position,
-  maxTokenExpect = 200
+  maxTokenExpect = 200,
+  url: string
 ) => {
   const maxTokenHardLimit = 1000;
   const maxToken =
@@ -60,8 +60,8 @@ export const getPrompt = async (
     Logger.startPerfMarker("Prepare prompt request");
 
     const [tokensBeforeSlice, tokensAfterSlice] = await Promise.all([
-      tokenize(textBeforeSlice),
-      tokenize(textAfterSlice),
+      tokenize(textBeforeSlice, url),
+      tokenize(textAfterSlice, url),
     ]);
     Logger.endPerfMarker("Prepare prompt request");
 

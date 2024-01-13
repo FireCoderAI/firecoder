@@ -5,6 +5,7 @@ import { abortInterval, delay } from "../utils/intervals";
 import Logger from "../logger";
 import { TelemetryInstance } from "../telemetry";
 import { sendCompletion } from "./localCompletion";
+import { servers } from "../server";
 
 const logCompletion = () => {
   const uuid = randomUUID();
@@ -53,7 +54,8 @@ export const getInlineCompletionProvider = (
       const prompt = await getPrompt(
         document,
         position,
-        triggerAuto ? maxToken : 1000
+        triggerAuto ? maxToken : 1000,
+        servers["base-small"].serverUrl
       );
 
       const parameters = triggerAuto
@@ -75,7 +77,10 @@ export const getInlineCompletionProvider = (
           prompt,
           parameters,
           abortController,
-          loggerCompletion.uuid()
+          loggerCompletion.uuid(),
+          triggerAuto
+            ? servers["base-small"].serverUrl
+            : servers["base-small"].serverUrl
         );
 
         if (completion === null) {
