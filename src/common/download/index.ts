@@ -32,6 +32,10 @@ interface Spec {
       cpu: ResourceInfo;
       metal: ResourceInfo;
     };
+    arm64: {
+      cpu: ResourceInfo;
+      metal: ResourceInfo;
+    };
   };
 }
 
@@ -102,6 +106,9 @@ const getServerInfo = async (): Promise<ResourceInfo | null> => {
   if (osplatform === "darwin") {
     if (osmachine === "x86_64") {
       return spec["darwin"]["x86-64"]["cpu"];
+    }
+    if (osmachine === "arm64") {
+      return spec["darwin"]["arm64"]["cpu"];
     }
   }
 

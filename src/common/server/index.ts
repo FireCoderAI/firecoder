@@ -1,9 +1,14 @@
 import * as vscode from "vscode";
-import { ChildProcessWithoutNullStreams, spawn } from "child_process";
+import * as os from "node:os";
+import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import { downloadModel, downloadServer } from "../download";
 import Logger from "../logger";
 import statusBar from "../statusBar";
 import { TelemetrySenderInstance } from "../telemetry";
+
+const osplatform = os.platform();
+const osmachine = os.machine();
+const isMacArm64 = osplatform === "darwin" && osmachine === "arm64";
 
 const models = {
   "base-small": {
@@ -85,6 +90,7 @@ class Server {
         "--cont-batching",
         "--embedding",
         "--log-disable",
+        ...(isMacArm64 ? ["--nobrowser"] : []),
       ],
       {
         detached: false,
@@ -164,10 +170,18 @@ class Server {
 
   public async checkServerStatus() {
     try {
-      const res = await fetch(`${this.serverUrl}/health`, {
-        method: "GET",
-      });
+      const isMacArm64 = osplatform === "darwin" && osmachine === "arm64";
+      const res = await fetch(
+        `${this.serverUrl}/${isMacArm64 ? "model.json" : "health"}`,
+        {
+          method: "GET",
+        }
+      );
       if (res.ok) {
+        if (isMacArm64) {
+          this.status = "started";
+          return true;
+        }
         const resJson = (await res.json()) as { status: string };
         if (resJson.status === "ok") {
           this.status = "started";
