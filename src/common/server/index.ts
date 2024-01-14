@@ -3,6 +3,7 @@ import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { downloadModel, downloadServer } from "../download";
 import Logger from "../logger";
 import statusBar from "../statusBar";
+import { TelemetrySenderInstance } from "../telemetry";
 
 const models = {
   "base-small": {
@@ -49,12 +50,23 @@ class Server {
     }
 
     const { stopTask } = statusBar.startTask();
-    const serverPath = await downloadServer();
-    const modelPath = await downloadModel();
+    let serverPath: string | undefined, modelPath: string | undefined;
+    try {
+      serverPath = await downloadServer();
+      modelPath = await downloadModel();
+    } catch (error) {
+      TelemetrySenderInstance.sendErrorData(error as Error, {
+        step: "Error while downloading server or model",
+      });
+      stopTask();
+      throw error;
+    }
 
     if (!serverPath || !modelPath) {
-      Logger.error("Server is not started.");
-      vscode.window.showErrorMessage(`Server is not started.`);
+      Logger.error("Server is not started. Don't have server or model path.");
+      TelemetrySenderInstance.sendEventData(
+        "Server is not started. Don't have server or model path."
+      );
       stopTask();
       return false;
     }
@@ -72,26 +84,55 @@ class Server {
         "4096",
         "--cont-batching",
         "--embedding",
-        "--mlock",
+        "--log-disable",
       ],
       {
         detached: false,
       }
     );
 
+    // TODO: rewrite this
     this.serverProcess.stdout.on("data", function (msg) {
-      Logger.trace(msg, "llama");
+      try {
+        const msgString = msg.toString();
+        // TODO: split it by new line and send each line
+        if (
+          msgString.includes('"path":"/health"') ||
+          msgString.includes('"path":"/tokenize"') ||
+          msgString.includes("sampled token:")
+        ) {
+          return;
+        }
+        TelemetrySenderInstance.sendLogText(msgString);
+        Logger.trace(msgString, "llama");
+      } catch (error) {
+        TelemetrySenderInstance.sendErrorData(error as Error);
+      }
     });
     this.serverProcess.stderr.on("data", function (msg) {
-      Logger.trace(msg, "llama");
+      try {
+        const msgString = msg.toString();
+        if (
+          msgString.includes('"path":"/health"') ||
+          msgString.includes('"path":"/tokenize"') ||
+          msgString.includes("sampled token:")
+        ) {
+          return;
+        }
+        TelemetrySenderInstance.sendErrorData(new Error(msgString));
+        Logger.error(msgString, "llama");
+      } catch (error) {
+        TelemetrySenderInstance.sendErrorData(error as Error);
+      }
     });
     this.serverProcess.on("error", (err) => {
-      Logger.trace(`error: ${err.message}`, "llama");
-      Logger.trace(`name: ${err.name}`, "llama");
-      Logger.trace(`stack: ${err.stack}`, "llama");
-      Logger.trace(`cause: ${err.cause}`, "llama");
+      Logger.error(`error: ${err.message}`, "llama");
+      Logger.error(`name: ${err.name}`, "llama");
+      Logger.error(`stack: ${err.stack}`, "llama");
+      Logger.error(`cause: ${err.cause}`, "llama");
     });
     this.serverProcess.on("close", (code) => {
+      TelemetrySenderInstance.sendLogText(`Server is closed with code ${code}`);
       Logger.trace(`child process exited with code ${code}`, "llama");
     });
     const isServerStarted = await this.checkServerStatusIntervalWithTimeout(
@@ -102,7 +143,7 @@ class Server {
       Logger.error("Server is not started.");
       vscode.window.showErrorMessage(`Server is not started.`);
       stopTask();
-      return false;
+      throw new Error("Server is not started.");
     }
 
     stopTask();
@@ -123,16 +164,18 @@ class Server {
 
   public async checkServerStatus() {
     try {
-      const res = await fetch(`${this.serverUrl}/model.json`, {
+      const res = await fetch(`${this.serverUrl}/health`, {
         method: "GET",
       });
       if (res.ok) {
-        this.status = "started";
-        return true;
-      } else {
-        this.status = "stopped";
-        return false;
+        const resJson = (await res.json()) as { status: string };
+        if (resJson.status === "ok") {
+          this.status = "started";
+          return true;
+        }
       }
+      this.status = "stopped";
+      return false;
     } catch (error) {
       this.status = "stopped";
       return false;

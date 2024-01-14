@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { randomUUID } from "crypto";
 import Logger from "../logger";
 import statusBar from "../statusBar";
-import { TelemetryInstance } from "../telemetry";
+import { TelemetrySenderInstance } from "../telemetry";
 
 const logCompletion = (uuid = randomUUID() as string) => {
   return {
@@ -54,7 +54,6 @@ export const sendCompletion = async (
   };
   try {
     loggerCompletion.info("Request: started");
-    TelemetryInstance.sendTelemetryEvent("Start request");
 
     const startTime = performance.now();
 

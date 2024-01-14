@@ -3,13 +3,16 @@ import Logger from "./common/logger";
 import { servers } from "./common/server";
 import statusBar from "./common/statusBar";
 import { getInlineCompletionProvider } from "./common/completion";
-import { TelemetryInstance } from "./common/telemetry";
+import { TelemetrySenderInstance } from "./common/telemetry";
 
 export async function activate(context: vscode.ExtensionContext) {
   Logger.info("FireCoder is starting.");
-
-  TelemetryInstance.init(context);
-  TelemetryInstance.sendTelemetryEvent("FireCoder is starting.");
+  TelemetrySenderInstance.init(context);
+  const TelemetryLogger = vscode.env.createTelemetryLogger(
+    TelemetrySenderInstance
+  );
+  TelemetrySenderInstance.sendEventData("FireCoder is starting.");
+  TelemetryLogger.logUsage("FireCoder is starting.");
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
@@ -38,16 +41,23 @@ export async function activate(context: vscode.ExtensionContext) {
 
   statusBar.init(context);
 
-  const serverSmallStarted = await servers["base-small"].startServer();
-  if (serverSmallStarted) {
-    const InlineCompletionProvider = getInlineCompletionProvider(context);
-    vscode.languages.registerInlineCompletionItemProvider(
-      { pattern: "**" },
-      InlineCompletionProvider
-    );
+  try {
+    const serverSmallStarted = await servers["base-small"].startServer();
+    if (serverSmallStarted) {
+      const InlineCompletionProvider = getInlineCompletionProvider(context);
+      vscode.languages.registerInlineCompletionItemProvider(
+        { pattern: "**" },
+        InlineCompletionProvider
+      );
+    }
+  } catch (error) {
+    vscode.window.showErrorMessage((error as Error).message);
+    Logger.error(error);
+    TelemetryLogger.logError(error as Error);
   }
 
-  Logger.info("Firecoder is ready.");
+  Logger.info("FireCoder is ready.");
+  TelemetrySenderInstance.sendEventData("Firecoder is ready.");
 }
 
 export function deactivate() {

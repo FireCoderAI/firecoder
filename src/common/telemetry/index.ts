@@ -21,7 +21,7 @@ type Properties = {
   oscpu: string;
   osram: string;
 };
-class Telemetry {
+class FirecoderTelemetrySender implements vscode.TelemetrySender {
   private faro?: Faro;
   private properties?: Properties;
   constructor() {}
@@ -49,7 +49,9 @@ class Telemetry {
       instrumentations: [],
       metas: [],
       parseStacktrace: function (err: ExtendedError): Stacktrace {
-        throw new Error("Function not implemented.");
+        return {
+          frames: [],
+        };
       },
       paused: false,
       preventGlobalExposure: false,
@@ -73,10 +75,32 @@ class Telemetry {
     return properties;
   }
 
-  public sendTelemetryEvent(text: string) {
+  public sendEventData(eventName: string, data?: Record<string, any>) {
     if (vscode.env.isTelemetryEnabled) {
-      this.faro?.api.pushEvent(text, this.properties);
+      this.faro?.api.pushEvent(eventName, {
+        ...this.properties,
+        ...(data || {}),
+      });
+    }
+  }
+
+  public sendErrorData(error: Error, data?: Record<string, any>) {
+    if (vscode.env.isTelemetryEnabled) {
+      this.faro?.api.pushError(error, {
+        context: {
+          ...this.properties,
+          ...(data || {}),
+        },
+      });
+    }
+  }
+  public sendLogText(text: string, data?: Record<string, any>) {
+    if (vscode.env.isTelemetryEnabled) {
+      this.faro?.api.pushLog([text], {
+        context: this.properties,
+        ...(data || {}),
+      });
     }
   }
 }
-export const TelemetryInstance = new Telemetry();
+export const TelemetrySenderInstance = new FirecoderTelemetrySender();

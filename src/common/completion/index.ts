@@ -3,7 +3,7 @@ import { randomUUID } from "crypto";
 import { getPrompt } from "../prompt";
 import { abortInterval, delay } from "../utils/intervals";
 import Logger from "../logger";
-import { TelemetryInstance } from "../telemetry";
+import { TelemetrySenderInstance } from "../telemetry";
 import { sendCompletion } from "./localCompletion";
 import { servers } from "../server";
 
@@ -71,7 +71,9 @@ export const getInlineCompletionProvider = (
 
       try {
         loggerCompletion.info("Request: started");
-        TelemetryInstance.sendTelemetryEvent("Start request");
+        TelemetrySenderInstance.sendEventData("Start request", {
+          request: loggerCompletion.uuid(),
+        });
 
         const completion = await sendCompletion(
           prompt,

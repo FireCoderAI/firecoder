@@ -43,31 +43,35 @@ const downloadFileWithProgress = async (
 ) => {
   const progress = createProgress("FireCoder", title);
 
-  const response = await fetch(url);
-  const size = Number(response.headers.get("content-length"));
+  try {
+    const response = await fetch(url);
+    const size = Number(response.headers.get("content-length"));
 
-  let receivedLength = 0;
+    let receivedLength = 0;
 
-  const fileStream = fs.createWriteStream(path, { flags: "wx" });
-  const progressStream = new Transform({
-    transform(chunk, encoding, callback) {
-      receivedLength += chunk.length;
-      progress.setMessage(
-        titleProgress(formatBytes(receivedLength), formatBytes(size))
-      );
-      const progressValue = (chunk.length / size) * 100;
-      progress.increaseProgress(progressValue);
-      callback(null, chunk);
-    },
-  });
+    const fileStream = fs.createWriteStream(path, { flags: "wx" });
+    const progressStream = new Transform({
+      transform(chunk, encoding, callback) {
+        receivedLength += chunk.length;
+        progress.setMessage(
+          titleProgress(formatBytes(receivedLength), formatBytes(size))
+        );
+        const progressValue = (chunk.length / size) * 100;
+        progress.increaseProgress(progressValue);
+        callback(null, chunk);
+      },
+    });
 
-  await finished(
-    Readable.fromWeb(response.body as ReadableStream<any>)
-      .pipe(progressStream)
-      .pipe(fileStream)
-  );
-
-  progress.finishProgress();
+    await finished(
+      Readable.fromWeb(response.body as ReadableStream<any>)
+        .pipe(progressStream)
+        .pipe(fileStream)
+    );
+  } catch (error) {
+    throw error;
+  } finally {
+    progress.finishProgress();
+  }
 };
 
 const getServerInfo = async (): Promise<ResourceInfo | null> => {
