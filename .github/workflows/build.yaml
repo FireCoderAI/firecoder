@@ -304,6 +304,16 @@ jobs:
                     checksum: getCheckSum("./build-cmake-macOS-metal/server"),
                     url: s3Path + 'macOS-x86-64-metal'
                   },
+                },
+                "arm64": {
+                  cpu: {
+                    checksum: "51ce309f4f5d055fd226a154784812fce10396ad8f8b3478b94fff24569a5063",
+                    url: "https://pub-ad9e0b7360bc4259878d0f81b89c5405.r2.dev/macOS-arm64",
+                  },
+                  metal: {
+                    checksum: "51ce309f4f5d055fd226a154784812fce10396ad8f8b3478b94fff24569a5063",
+                    url: "https://pub-ad9e0b7360bc4259878d0f81b89c5405.r2.dev/macOS-arm64-metal"
+                  },
                 }
               }
             };
