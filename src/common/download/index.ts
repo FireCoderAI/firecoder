@@ -151,7 +151,7 @@ export const downloadServer = async () => {
     const checksum = await getChecksum(serverPath);
 
     if (checksum === serverFileInfo.checksum) {
-      // await fsPromise.chmod(serverPath, 0o755);
+      await fsPromise.chmod(serverPath, 0o755);
       Logger.info("Checksum server is correct, just return server path", {
         component: "download>server",
         sendTelemetry: true,
@@ -213,10 +213,14 @@ export const downloadModel = async () => {
     const checksum = await getChecksum(modelPath);
 
     if (checksum === modelFileInfo.checksum) {
+      Logger.info("Checksum model is correct, just return model path", {
+        component: "download>model",
+        sendTelemetry: true,
+      });
       return modelPath;
     }
     Logger.info("Checksum model mismatch", {
-      component: "download model",
+      component: "download>model",
       sendTelemetry: true,
     });
   }
