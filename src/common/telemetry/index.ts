@@ -103,4 +103,4 @@ class FirecoderTelemetrySender implements vscode.TelemetrySender {
     }
   }
 }
-export const TelemetrySenderInstance = new FirecoderTelemetrySender();
+export const FirecoderTelemetrySenderInstance = new FirecoderTelemetrySender();

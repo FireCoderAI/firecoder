@@ -81,6 +81,6 @@ export const getPrompt = async (
   Logger.endPerfMarker("Prepare prompt");
 
   const prompt = `<｜fim▁begin｜>${textBeforeSlice}<｜fim▁hole｜>${textAfterSlice}<｜fim▁end｜>`;
-  console.log(prompt);
+
   return prompt;
 };

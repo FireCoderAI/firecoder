@@ -3,7 +3,6 @@ import { randomUUID } from "crypto";
 import { getPrompt } from "../prompt";
 import { abortInterval, delay } from "../utils/intervals";
 import Logger from "../logger";
-import { TelemetrySenderInstance } from "../telemetry";
 import { sendCompletion } from "./localCompletion";
 import { servers } from "../server";
 
@@ -11,7 +10,8 @@ const logCompletion = () => {
   const uuid = randomUUID();
 
   return {
-    info: (text: any) => Logger.info(text, `Completion: ${uuid.slice(-8)}`),
+    info: (text: any) =>
+      Logger.info(text, { component: `Completion: ${uuid.slice(-8)}` }),
     uuid: () => uuid,
   };
 };
@@ -70,10 +70,13 @@ export const getInlineCompletionProvider = (
           };
 
       try {
-        loggerCompletion.info("Request: started");
-        TelemetrySenderInstance.sendEventData("Start request", {
-          request: loggerCompletion.uuid(),
-        });
+        Logger.info(
+          `Start request; Mode: ${triggerAuto ? "Auto" : "Manually"}`,
+          {
+            component: "completion",
+            sendTelemetry: true,
+          }
+        );
 
         const completion = await sendCompletion(
           prompt,

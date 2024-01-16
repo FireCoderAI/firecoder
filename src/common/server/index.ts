@@ -4,7 +4,7 @@ import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import { downloadModel, downloadServer } from "../download";
 import Logger from "../logger";
 import statusBar from "../statusBar";
-import { TelemetrySenderInstance } from "../telemetry";
+import { FirecoderTelemetrySenderInstance } from "../telemetry";
 
 const osplatform = os.platform();
 const osmachine = os.machine();
@@ -50,17 +50,26 @@ class Server {
   public async startServer() {
     const serverIsStarted = await this.checkServerStatus();
     if (serverIsStarted) {
-      Logger.info("Server is started already.");
+      Logger.info("Server is started already.", {
+        component: "server",
+        sendTelemetry: true,
+      });
       return true;
     }
 
     const { stopTask } = statusBar.startTask();
+
     let serverPath: string | undefined, modelPath: string | undefined;
+
     try {
       serverPath = await downloadServer();
       modelPath = await downloadModel();
     } catch (error) {
-      TelemetrySenderInstance.sendErrorData(error as Error, {
+      Logger.error(String(error), {
+        component: "server",
+        sendTelemetry: true,
+      });
+      FirecoderTelemetrySenderInstance.sendErrorData(error as Error, {
         step: "Error while downloading server or model",
       });
       stopTask();
@@ -68,13 +77,20 @@ class Server {
     }
 
     if (!serverPath || !modelPath) {
-      Logger.error("Server is not started. Don't have server or model path.");
-      TelemetrySenderInstance.sendEventData(
-        "Server is not started. Don't have server or model path."
-      );
+      Logger.error("Server is not started. Don't have server or model path.", {
+        component: "server",
+        sendTelemetry: true,
+      });
+
       stopTask();
       return false;
     }
+
+    Logger.info("Server is ready to start.", {
+      component: "server",
+      sendTelemetry: true,
+    });
+
     const port = models[this.typeModel].port;
     this.serverProcess = spawn(
       serverPath,
@@ -109,10 +125,9 @@ class Server {
         ) {
           return;
         }
-        TelemetrySenderInstance.sendLogText(msgString);
-        Logger.trace(msgString, "llama");
+        Logger.trace(msgString, { component: "llama", sendTelemetry: true });
       } catch (error) {
-        TelemetrySenderInstance.sendErrorData(error as Error);
+        FirecoderTelemetrySenderInstance.sendErrorData(error as Error);
       }
     });
     this.serverProcess.stderr.on("data", function (msg) {
@@ -125,31 +140,45 @@ class Server {
         ) {
           return;
         }
-        TelemetrySenderInstance.sendErrorData(new Error(msgString));
-        Logger.error(msgString, "llama");
+        Logger.trace(msgString, { component: "llama", sendTelemetry: true });
       } catch (error) {
-        TelemetrySenderInstance.sendErrorData(error as Error);
+        FirecoderTelemetrySenderInstance.sendErrorData(error as Error);
       }
     });
     this.serverProcess.on("error", (err) => {
-      Logger.error(`error: ${err.message}`, "llama");
-      Logger.error(`name: ${err.name}`, "llama");
-      Logger.error(`stack: ${err.stack}`, "llama");
-      Logger.error(`cause: ${err.cause}`, "llama");
+      Logger.error(
+        `error: ${err.message}; name: ${err.name}; stack: ${err.stack}; cause: ${err.cause}`,
+        {
+          component: "llama",
+          sendTelemetry: true,
+        }
+      );
+    });
+    this.serverProcess.on("message", (message) => {
+      Logger.error(String(message), {
+        component: "llama",
+        sendTelemetry: true,
+      });
     });
     this.serverProcess.on("close", (code) => {
-      TelemetrySenderInstance.sendLogText(`Server is closed with code ${code}`);
-      Logger.trace(`child process exited with code ${code}`, "llama");
+      Logger.trace(`child process exited with code ${code}`, {
+        component: "llama",
+      });
     });
+
     const isServerStarted = await this.checkServerStatusIntervalWithTimeout(
       5000
     );
 
     if (!isServerStarted) {
-      Logger.error("Server is not started.");
+      Logger.error("Server is not started.", {
+        component: "server",
+        sendTelemetry: true,
+      });
+
       vscode.window.showErrorMessage(`Server is not started.`);
       stopTask();
-      throw new Error("Server is not started.");
+      return true;
     }
 
     stopTask();
@@ -162,7 +191,10 @@ class Server {
     if (this.serverProcess) {
       const result = this.serverProcess.kill(9);
       if (result === false) {
-        Logger.error("Server is not running or is not responding");
+        Logger.error("Server is not running or is not responding", {
+          component: "server",
+          sendTelemetry: true,
+        });
       }
       this.stopServerStatusInterval?.();
     }
@@ -222,6 +254,7 @@ class Server {
       clearInterval(interval);
     };
   }
+
   private async checkServerStatusIntervalWithTimeout(timeout: number) {
     return new Promise<boolean>(async (resolve) => {
       const statusFirstTrying = await this.checkServerStatus();

@@ -1,4 +1,11 @@
 import * as vscode from "vscode";
+import { FirecoderTelemetrySenderInstance } from "./telemetry";
+import { LogLevel } from "@grafana/faro-core";
+
+interface LogOptions {
+  component?: string;
+  sendTelemetry?: boolean;
+}
 
 class Log {
   private outputChannel: vscode.LogOutputChannel;
@@ -39,24 +46,64 @@ class Log {
     return component ? `${component}> ${message}` : message;
   }
 
-  public trace(message: any, component: string) {
-    this.outputChannel.trace(this.logString(message, component));
+  public trace(message: any, options?: LogOptions) {
+    const messageString = this.logString(message, options?.component);
+
+    this.outputChannel.trace(messageString);
+
+    if (options?.sendTelemetry) {
+      FirecoderTelemetrySenderInstance.sendLogText(messageString, {
+        level: LogLevel.TRACE,
+      });
+    }
   }
 
-  public debug(message: any, component: string) {
-    this.outputChannel.debug(this.logString(message, component));
+  public debug(message: any, options?: LogOptions) {
+    const messageString = this.logString(message, options?.component);
+
+    this.outputChannel.debug(messageString);
+
+    if (options?.sendTelemetry) {
+      FirecoderTelemetrySenderInstance.sendLogText(messageString, {
+        level: LogLevel.DEBUG,
+      });
+    }
   }
 
-  public info(message: any, component?: string) {
-    this.outputChannel.info(this.logString(message, component));
+  public info(message: any, options?: LogOptions) {
+    const messageString = this.logString(message, options?.component);
+
+    this.outputChannel.info(messageString);
+
+    if (options?.sendTelemetry) {
+      FirecoderTelemetrySenderInstance.sendLogText(messageString, {
+        level: LogLevel.INFO,
+      });
+    }
   }
 
-  public warn(message: any, component?: string) {
-    this.outputChannel.warn(this.logString(message, component));
+  public warn(message: any, options?: LogOptions) {
+    const messageString = this.logString(message, options?.component);
+
+    this.outputChannel.warn(messageString);
+
+    if (options?.sendTelemetry) {
+      FirecoderTelemetrySenderInstance.sendLogText(messageString, {
+        level: LogLevel.WARN,
+      });
+    }
   }
 
-  public error(message: any, component?: string) {
-    this.outputChannel.error(this.logString(message, component));
+  public error(message: any, options?: LogOptions) {
+    const messageString = this.logString(message, options?.component);
+
+    this.outputChannel.error(messageString);
+
+    if (options?.sendTelemetry) {
+      FirecoderTelemetrySenderInstance.sendLogText(messageString, {
+        level: LogLevel.ERROR,
+      });
+    }
   }
 }
 

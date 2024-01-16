@@ -8,6 +8,7 @@ import { ReadableStream } from "node:stream/web";
 import { createProgress } from "../utils/progress";
 import { formatBytes } from "../utils/formatBytes";
 import { checkFileOrFolderExists, getChecksum, getSaveFolder } from "./utils";
+import Logger from "../logger";
 
 interface ResourceInfo {
   url: string;
@@ -137,24 +138,41 @@ export const downloadServer = async () => {
   const serverFileInfo = await getServerInfo();
 
   if (serverFileInfo === null) {
-    // TODO: throw error
-    return;
+    throw new Error("Server file info not found");
   }
+
+  Logger.info("Got server file info", {
+    component: "download>server",
+    sendTelemetry: true,
+  });
 
   const isExists = await checkFileOrFolderExists(serverPath);
   if (isExists) {
     const checksum = await getChecksum(serverPath);
 
     if (checksum === serverFileInfo.checksum) {
+      // await fsPromise.chmod(serverPath, 0o755);
+      Logger.info("Checksum server is correct, just return server path", {
+        component: "download>server",
+        sendTelemetry: true,
+      });
       return serverPath;
     }
 
-    console.log("Checksum server mismatch");
+    Logger.info("Checksum server mismatch", {
+      component: "download>server",
+      sendTelemetry: true,
+    });
   }
 
   if (isExists) {
     await fsPromise.unlink(serverPath);
   }
+
+  Logger.info("Started download server", {
+    component: "download>server",
+    sendTelemetry: true,
+  });
 
   await downloadFileWithProgress(
     serverFileInfo.url,
@@ -164,6 +182,12 @@ export const downloadServer = async () => {
   );
 
   await fsPromise.chmod(serverPath, 0o755);
+
+  Logger.info("Finish download server", {
+    component: "download>server",
+    sendTelemetry: true,
+  });
+
   return serverPath;
 };
 
@@ -175,9 +199,13 @@ export const downloadModel = async () => {
   const modelFileInfo = await getModelInfo();
 
   if (modelFileInfo === null) {
-    // TODO: throw error
-    return;
+    throw new Error("Server file info not found");
   }
+
+  Logger.info("Got model file info", {
+    component: "download>model",
+    sendTelemetry: true,
+  });
 
   const isExists = await checkFileOrFolderExists(modelPath);
 
@@ -187,12 +215,20 @@ export const downloadModel = async () => {
     if (checksum === modelFileInfo.checksum) {
       return modelPath;
     }
-    console.log("Checksum model mismatch");
+    Logger.info("Checksum model mismatch", {
+      component: "download model",
+      sendTelemetry: true,
+    });
   }
 
   if (isExists) {
     await fsPromise.unlink(modelPath);
   }
+
+  Logger.info("Started download model", {
+    component: "download>model",
+    sendTelemetry: true,
+  });
 
   await downloadFileWithProgress(
     modelFileInfo.url,
@@ -200,6 +236,11 @@ export const downloadModel = async () => {
     "Downloading model",
     (downloaded, total) => `Downloading model: ${downloaded} / ${total}`
   );
+
+  Logger.info("Finish download model", {
+    component: "download>model",
+    sendTelemetry: true,
+  });
 
   return modelPath;
 };

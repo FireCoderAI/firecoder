@@ -2,11 +2,11 @@ import * as vscode from "vscode";
 import { randomUUID } from "crypto";
 import Logger from "../logger";
 import statusBar from "../statusBar";
-import { TelemetrySenderInstance } from "../telemetry";
 
 const logCompletion = (uuid = randomUUID() as string) => {
   return {
-    info: (text: any) => Logger.info(text, `Completion: ${uuid.slice(-8)}`),
+    info: (text: any) =>
+      Logger.info(text, { component: `Completion: ${uuid.slice(-8)}` }),
     uuid: () => uuid,
   };
 };
