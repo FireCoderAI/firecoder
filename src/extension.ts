@@ -74,5 +74,5 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-  servers["base-small"].stopServer();
+  Object.values(servers).forEach((server) => server.stopServer());
 }

@@ -9,6 +9,7 @@ import { createProgress } from "../utils/progress";
 import { formatBytes } from "../utils/formatBytes";
 import { checkFileOrFolderExists, getChecksum, getSaveFolder } from "./utils";
 import Logger from "../logger";
+import { TypeModel } from "../server";
 
 interface ResourceInfo {
   url: string;
@@ -116,13 +117,43 @@ const getServerInfo = async (): Promise<ResourceInfo | null> => {
   return null;
 };
 
-const getModelInfo = async (): Promise<ResourceInfo | null> => {
-  // TODO: get latest version
-  return {
-    url: "https://pub-ad9e0b7360bc4259878d0f81b89c5405.r2.dev/deepseek-coder-1.3b-base.Q8_0.gguf",
-    checksum:
-      "9fcdcb283ef5b1d80ec7365b307c1ceab0c0f8ea079b49969f7febc06a11bccd",
+const getModelInfo = async (
+  typeModel: TypeModel
+): Promise<ResourceInfo | null> => {
+  const models: Record<TypeModel, { url: string; checksum: string }> = {
+    "base-small": {
+      url: "https://huggingface.co/TheBloke/deepseek-coder-1.3b-base-GGUF/resolve/main/deepseek-coder-1.3b-base.Q8_0.gguf",
+      checksum:
+        "9fcdcb283ef5b1d80ec7365b307c1ceab0c0f8ea079b49969f7febc06a11bccd",
+    },
+    "base-medium": {
+      url: "https://huggingface.co/TheBloke/deepseek-coder-6.7B-base-GGUF/resolve/main/deepseek-coder-6.7b-base.Q8_0.gguf",
+      checksum:
+        "a2f82242ac5e465037cbf1ed754f04f0be044ee196e1589905f9e4dcd0e6559d",
+    },
+    "base-large": {
+      url: "https://huggingface.co/TheBloke/deepseek-coder-33B-base-GGUF/resolve/main/deepseek-coder-33b-base.Q8_0.gguf",
+      checksum:
+        "9b9210b7de8c26d94773146613ee86844a714aae997223355bb520927627feff",
+    },
+    "chat-small": {
+      url: "https://huggingface.co/TheBloke/deepseek-coder-1.3b-instruct-GGUF/resolve/main/deepseek-coder-1.3b-instruct.Q8_0.gguf",
+      checksum:
+        "36eb025121a50ee6d37fe900659393ff8fb5ea34adc0e3c11fc635e07624dcdb",
+    },
+    "chat-medium": {
+      url: "https://huggingface.co/TheBloke/deepseek-coder-6.7B-instruct-GGUF/resolve/main/deepseek-coder-6.7b-instruct.Q8_0.gguf",
+      checksum:
+        "02cd6ce7ccec670cf6d3dd147932f13e584f9e964d5a3297a74b401b658471ae",
+    },
+    "chat-large": {
+      url: "https://huggingface.co/TheBloke/deepseek-coder-33B-instruct-GGUF/resolve/main/deepseek-coder-33b-instruct.Q8_0.gguf",
+      checksum:
+        "86529f8eefc87a80bd20d62229ee5acdc32d5773be8575a143bc491924865c21",
+    },
   };
+
+  return models[typeModel];
 };
 
 export const downloadServer = async () => {
@@ -191,12 +222,12 @@ export const downloadServer = async () => {
   return serverPath;
 };
 
-export const downloadModel = async () => {
+export const downloadModel = async (typeModel: TypeModel) => {
   const pathToSave = await getSaveFolder();
 
   const modelPath = path.join(pathToSave, "model.gguf");
 
-  const modelFileInfo = await getModelInfo();
+  const modelFileInfo = await getModelInfo(typeModel);
 
   if (modelFileInfo === null) {
     throw new Error("Server file info not found");

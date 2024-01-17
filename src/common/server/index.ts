@@ -63,7 +63,7 @@ class Server {
 
     try {
       serverPath = await downloadServer();
-      modelPath = await downloadModel();
+      modelPath = await downloadModel(this.typeModel);
     } catch (error) {
       Logger.error(String(error), {
         component: "server",
