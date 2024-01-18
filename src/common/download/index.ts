@@ -1,4 +1,3 @@
-import * as vscode from "vscode";
 import path from "node:path";
 import fs from "node:fs";
 import fsPromise from "node:fs/promises";
@@ -11,6 +10,7 @@ import { formatBytes } from "../utils/formatBytes";
 import { checkFileOrFolderExists, getChecksum, getSaveFolder } from "./utils";
 import Logger from "../logger";
 import { TypeModel } from "../server";
+import { configuration } from "../utils/configuration";
 
 interface ResourceInfo {
   url: string;
@@ -97,19 +97,27 @@ const getServerInfo = async (): Promise<ResourceInfo | null> => {
 
   if (osplatform === "win32") {
     if (osmachine === "x86_64") {
-      const useGPU = vscode.workspace
-        .getConfiguration("firecoder")
-        .get("experimental.windows.usegpu.nvidia");
-      if (useGPU) {
+      const useGPUNvidia = configuration.get(
+        "experimental.windows.usegpu.nvidia"
+      );
+      if (useGPUNvidia) {
         return spec["win32"]["x86-64"]["cublas"];
       } else {
         return spec["win32"]["x86-64"]["cpu"];
       }
     }
   }
+
   if (osplatform === "linux") {
     if (osmachine === "x86_64") {
-      return spec["linux"]["x86-64"]["cpu"];
+      const useGPUNvidia = configuration.get(
+        "experimental.linux.usegpu.nvidia"
+      );
+      if (useGPUNvidia) {
+        return spec["linux"]["x86-64"]["cublas"];
+      } else {
+        return spec["linux"]["x86-64"]["cpu"];
+      }
     }
   }
 
@@ -118,7 +126,12 @@ const getServerInfo = async (): Promise<ResourceInfo | null> => {
       return spec["darwin"]["x86-64"]["cpu"];
     }
     if (osmachine === "arm64") {
-      return spec["darwin"]["arm64"]["cpu"];
+      const useGPUMetal = configuration.get("experimental.osx.usegpu.metal");
+      if (useGPUMetal) {
+        return spec["darwin"]["arm64"]["metal"];
+      } else {
+        return spec["darwin"]["arm64"]["cpu"];
+      }
     }
   }
 

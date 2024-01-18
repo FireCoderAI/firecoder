@@ -5,6 +5,7 @@ import { downloadModel, downloadServer } from "../download";
 import Logger from "../logger";
 import statusBar from "../statusBar";
 import { FirecoderTelemetrySenderInstance } from "../telemetry";
+import { configuration } from "../utils/configuration";
 
 const osplatform = os.platform();
 const osmachine = os.machine();
@@ -90,11 +91,10 @@ class Server {
       component: "server",
       sendTelemetry: true,
     });
-    const useGPU = vscode.workspace
-      .getConfiguration("firecoder")
-      .get("experimental.windows.usegpu.nvidia");
-
-    const osplatform = os.platform();
+    const useGPU =
+      configuration.get("experimental.linux.usegpu.nvidia") ||
+      configuration.get("experimental.osx.usegpu.metal") ||
+      configuration.get("experimental.windows.usegpu.nvidia");
 
     const port = models[this.typeModel].port;
     this.serverProcess = spawn(
@@ -112,7 +112,7 @@ class Server {
         "--embedding",
         "--log-disable",
         ...(isMacArm64 ? ["--nobrowser"] : []),
-        ...(useGPU && osplatform === "win32" ? ["--n-gpu-layers", "100"] : []),
+        ...(useGPU ? ["--n-gpu-layers", "100"] : []),
       ],
       {
         detached: false,
@@ -127,6 +127,7 @@ class Server {
         if (
           msgString.includes('"path":"/health"') ||
           msgString.includes('"path":"/tokenize"') ||
+          msgString.includes("/model.json") ||
           msgString.includes("sampled token:")
         ) {
           return;
@@ -142,6 +143,7 @@ class Server {
         if (
           msgString.includes('"path":"/health"') ||
           msgString.includes('"path":"/tokenize"') ||
+          msgString.includes("/model.json") ||
           msgString.includes("sampled token:")
         ) {
           return;
@@ -208,7 +210,8 @@ class Server {
 
   public async checkServerStatus() {
     try {
-      const isMacArm64 = osplatform === "darwin" && osmachine === "arm64";
+      // const isMacArm64 = osplatform === "darwin" && osmachine === "arm64";
+      const isMacArm64 = true;
       const res = await fetch(
         `${this.serverUrl}/${isMacArm64 ? "model.json" : "health"}`,
         {
