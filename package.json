@@ -48,7 +48,27 @@
         "command": "firecoder.inlineSuggest",
         "mac": "ctrl+enter"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "FireCoder",
+      "properties": {
+        "firecoder.experimental.windows.usegpu.nvidia": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use experimental GPU Nvidia support for Windows."
+        },
+        "firecoder.experimental.linux.usegpu.nvidia": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use experimental GPU Nvidia support for Linux."
+        },
+        "firecoder.experimental.osx.usegpu.metal": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use experimental GPU Metal support for macOS."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "rm -rf out && npm run esbuild-base -- --minify",

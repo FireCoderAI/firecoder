@@ -1,3 +1,4 @@
+import * as vscode from "vscode";
 import path from "node:path";
 import fs from "node:fs";
 import fsPromise from "node:fs/promises";
@@ -96,7 +97,14 @@ const getServerInfo = async (): Promise<ResourceInfo | null> => {
 
   if (osplatform === "win32") {
     if (osmachine === "x86_64") {
-      return spec["win32"]["x86-64"]["cpu"];
+      const useGPU = vscode.workspace
+        .getConfiguration("FireCoder")
+        .get("firecoder.experimental.windows.usegpu.nvidia");
+      if (useGPU) {
+        return spec["win32"]["x86-64"]["cublas"];
+      } else {
+        return spec["win32"]["x86-64"]["cpu"];
+      }
     }
   }
   if (osplatform === "linux") {
