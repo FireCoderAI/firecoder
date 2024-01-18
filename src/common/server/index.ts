@@ -91,8 +91,11 @@ class Server {
       sendTelemetry: true,
     });
     const useGPU = vscode.workspace
-      .getConfiguration("FireCoder")
-      .get("firecoder.experimental.windows.usegpu.nvidia");
+      .getConfiguration("firecoder")
+      .get("experimental.windows.usegpu.nvidia");
+
+    const osplatform = os.platform();
+
     const port = models[this.typeModel].port;
     this.serverProcess = spawn(
       serverPath,
@@ -109,7 +112,7 @@ class Server {
         "--embedding",
         "--log-disable",
         ...(isMacArm64 ? ["--nobrowser"] : []),
-        ...(useGPU ? ["--n-gpu-layers", "100"] : []),
+        ...(useGPU && osplatform === "win32" ? ["--n-gpu-layers", "100"] : []),
       ],
       {
         detached: false,

@@ -98,8 +98,8 @@ const getServerInfo = async (): Promise<ResourceInfo | null> => {
   if (osplatform === "win32") {
     if (osmachine === "x86_64") {
       const useGPU = vscode.workspace
-        .getConfiguration("FireCoder")
-        .get("firecoder.experimental.windows.usegpu.nvidia");
+        .getConfiguration("firecoder")
+        .get("experimental.windows.usegpu.nvidia");
       if (useGPU) {
         return spec["win32"]["x86-64"]["cublas"];
       } else {
