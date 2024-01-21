@@ -98,7 +98,7 @@ const getServerInfo = async (): Promise<ResourceInfo | null> => {
   if (osplatform === "win32") {
     if (osmachine === "x86_64") {
       const useGPUNvidia = configuration.get(
-        "experimental.windows.usegpu.nvidia"
+        "experimental.useGpu.windows.nvidia"
       );
       if (useGPUNvidia) {
         return spec["win32"]["x86-64"]["cublas"];
@@ -111,7 +111,7 @@ const getServerInfo = async (): Promise<ResourceInfo | null> => {
   if (osplatform === "linux") {
     if (osmachine === "x86_64") {
       const useGPUNvidia = configuration.get(
-        "experimental.linux.usegpu.nvidia"
+        "experimental.useGpu.linux.nvidia"
       );
       if (useGPUNvidia) {
         return spec["linux"]["x86-64"]["cublas"];
@@ -126,7 +126,7 @@ const getServerInfo = async (): Promise<ResourceInfo | null> => {
       return spec["darwin"]["x86-64"]["cpu"];
     }
     if (osmachine === "arm64") {
-      const useGPUMetal = configuration.get("experimental.osx.usegpu.metal");
+      const useGPUMetal = configuration.get("experimental.useGpu.osx.metal");
       if (useGPUMetal) {
         return spec["darwin"]["arm64"]["metal"];
       } else {
@@ -246,7 +246,7 @@ export const downloadServer = async () => {
 export const downloadModel = async (typeModel: TypeModel) => {
   const pathToSave = await getSaveFolder();
 
-  const modelPath = path.join(pathToSave, "model.gguf");
+  const modelPath = path.join(pathToSave, `model-${typeModel}.gguf`);
 
   const modelFileInfo = await getModelInfo(typeModel);
 
@@ -290,7 +290,8 @@ export const downloadModel = async (typeModel: TypeModel) => {
     modelFileInfo.url,
     modelPath,
     "Downloading model",
-    (downloaded, total) => `Downloading model: ${downloaded} / ${total}`
+    (downloaded, total) =>
+      `Downloading model ${typeModel}: ${downloaded} / ${total}`
   );
 
   Logger.info("Finish download model", {

@@ -11,7 +11,7 @@ const osplatform = os.platform();
 const osmachine = os.machine();
 const isMacArm64 = osplatform === "darwin" && osmachine === "arm64";
 
-const models = {
+const modelsBase = {
   "base-small": {
     port: 39720,
   },
@@ -21,6 +21,10 @@ const models = {
   "base-large": {
     port: 39722,
   },
+};
+export type TypeModelsBase = keyof typeof modelsBase;
+
+const modelsChat = {
   "chat-small": {
     port: 39725,
   },
@@ -30,6 +34,13 @@ const models = {
   "chat-large": {
     port: 39727,
   },
+};
+
+export type TypeModelsChat = keyof typeof modelsChat;
+
+const models = {
+  ...modelsBase,
+  ...modelsChat,
 };
 
 export type TypeModel = keyof typeof models;
@@ -92,9 +103,9 @@ class Server {
       sendTelemetry: true,
     });
     const useGPU =
-      configuration.get("experimental.linux.usegpu.nvidia") ||
-      configuration.get("experimental.osx.usegpu.metal") ||
-      configuration.get("experimental.windows.usegpu.nvidia");
+      configuration.get("experimental.useGpu.linux.nvidia") ||
+      configuration.get("experimental.useGpu.osx.metal") ||
+      configuration.get("experimental.useGpu.windows.nvidia");
 
     const port = models[this.typeModel].port;
     this.serverProcess = spawn(

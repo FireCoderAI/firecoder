@@ -52,20 +52,50 @@
     "configuration": {
       "title": "FireCoder",
       "properties": {
-        "firecoder.experimental.windows.usegpu.nvidia": {
+        "firecoder.experimental.useGpu.windows.nvidia": {
           "type": "boolean",
           "default": false,
           "description": "Use experimental GPU Nvidia support for Windows."
         },
-        "firecoder.experimental.linux.usegpu.nvidia": {
+        "firecoder.experimental.useGpu.linux.nvidia": {
           "type": "boolean",
           "default": false,
           "description": "Use experimental GPU Nvidia support for Linux."
         },
-        "firecoder.experimental.osx.usegpu.metal": {
+        "firecoder.experimental.useGpu.osx.metal": {
           "type": "boolean",
           "default": false,
           "description": "Use experimental GPU Metal support for macOS."
+        },
+        "firecoder.completion.autoMode": {
+          "type": "string",
+          "default": "base-small",
+          "markdownDescription": "Select a model for the automatic mode based on your system specifications.",
+          "enum": [
+            "base-small",
+            "base-medium",
+            "base-large"
+          ],
+          "enumDescriptions": [
+            "Use if you have only CPU.",
+            "Use if you have standard GPU.",
+            "Use if you have enterprise GPU."
+          ]
+        },
+        "firecoder.completion.manuallyMode": {
+          "type": "string",
+          "default": "base-small",
+          "markdownDescription": "Select a model for the manually mode based on your system specifications.",
+          "enum": [
+            "base-small",
+            "base-medium",
+            "base-large"
+          ],
+          "enumDescriptions": [
+            "Use if you have only CPU.",
+            "Use if you have standard GPU.",
+            "Use if you have enterprise GPU."
+          ]
         }
       }
     }

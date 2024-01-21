@@ -5,6 +5,7 @@ import { abortInterval, delay } from "../utils/intervals";
 import Logger from "../logger";
 import { sendCompletion } from "./localCompletion";
 import { servers } from "../server";
+import { configuration } from "../utils/configuration";
 
 const logCompletion = () => {
   const uuid = randomUUID();
@@ -51,11 +52,14 @@ export const getInlineCompletionProvider = (
       }
       const { abortController, requestFinish } = abortInterval(token);
 
+      const modelType = triggerAuto
+        ? configuration.get("completion.autoMode")
+        : configuration.get("completion.manuallyMode");
       const prompt = await getPrompt(
         document,
         position,
         triggerAuto ? maxToken : 1000,
-        servers["base-small"].serverUrl
+        servers[modelType].serverUrl
       );
 
       const parameters = triggerAuto

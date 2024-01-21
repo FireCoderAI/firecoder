@@ -1,11 +1,13 @@
 import crypto from "node:crypto";
 import { homedir } from "node:os";
 import path from "node:path";
-import fs from "node:fs/promises";
+import fsPromise from "node:fs/promises";
+import fs from "node:fs";
+import Logger from "../logger";
 
 export const checkFileOrFolderExists = async (pathToCheck: string) => {
   try {
-    await fs.access(pathToCheck, fs.constants.F_OK);
+    await fsPromise.access(pathToCheck, fsPromise.constants.F_OK);
     return true;
   } catch (error) {
     return false;
@@ -18,16 +20,25 @@ export const getSaveFolder = async () => {
   const folderIsExist = await checkFileOrFolderExists(pathSaveFolder);
 
   if (folderIsExist === false) {
-    await fs.mkdir(pathSaveFolder);
+    await fsPromise.mkdir(pathSaveFolder);
   }
 
   return pathSaveFolder;
 };
 
 export const getChecksum = async (path: string) => {
-  const file = await fs.readFile(path);
-
-  const hash = crypto.createHash("sha256").update(file).digest("hex");
-
-  return hash;
+  // TODO: Use sha256sum
+  return await new Promise((res, rej) => {
+    try {
+      const fsStream = fs.createReadStream(path);
+      const hash = crypto.createHash("sha256").setEncoding("hex");
+      fsStream.pipe(hash);
+      fsStream.on("end", () => {
+        hash.end();
+        res(hash.read());
+      });
+    } catch (error) {
+      rej(error);
+    }
+  });
 };

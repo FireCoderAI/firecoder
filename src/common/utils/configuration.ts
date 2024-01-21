@@ -1,18 +1,42 @@
 import * as vscode from "vscode";
+import { TypeModel, TypeModelsBase } from "../server";
 
 const ConfigurationProperties = {
-  "experimental.windows.usegpu.nvidia": {
+  "experimental.useGpu.windows.nvidia": {
     default: false,
   },
-  "experimental.linux.usegpu.nvidia": {
+  "experimental.useGpu.linux.nvidia": {
     default: false,
   },
-  "experimental.osx.usegpu.metal": {
+  "experimental.useGpu.osx.metal": {
     default: false,
   },
-};
+  "completion.autoMode": {
+    default: "base-small",
+  },
+  "completion.manuallyMode": {
+    default: "base-small",
+  },
+} as const;
 
-type ConfigurationPropertiesType = typeof ConfigurationProperties;
+interface ConfigurationPropertiesType
+  extends Record<keyof typeof ConfigurationProperties, any> {
+  "experimental.useGpu.windows.nvidia": {
+    possibleValues: boolean;
+  };
+  "experimental.useGpu.linux.nvidia": {
+    possibleValues: boolean;
+  };
+  "experimental.useGpu.osx.metal": {
+    possibleValues: boolean;
+  };
+  "completion.autoMode": {
+    possibleValues: TypeModelsBase;
+  };
+  "completion.manuallyMode": {
+    possibleValues: TypeModelsBase;
+  };
+}
 
 class Configuration {
   private configuration: vscode.WorkspaceConfiguration;
@@ -22,7 +46,7 @@ class Configuration {
 
   public get<T extends keyof ConfigurationPropertiesType>(
     property: T
-  ): ConfigurationPropertiesType[T]["default"] {
+  ): ConfigurationPropertiesType[T]["possibleValues"] {
     return (
       this.configuration.get(property) ??
       ConfigurationProperties[property]["default"]

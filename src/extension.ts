@@ -4,6 +4,7 @@ import { servers } from "./common/server";
 import statusBar from "./common/statusBar";
 import { getInlineCompletionProvider } from "./common/completion";
 import { FirecoderTelemetrySenderInstance } from "./common/telemetry";
+import { configuration } from "./common/utils/configuration";
 
 export async function activate(context: vscode.ExtensionContext) {
   FirecoderTelemetrySenderInstance.init(context);
@@ -47,8 +48,16 @@ export async function activate(context: vscode.ExtensionContext) {
   });
 
   try {
-    const serverSmallStarted = await servers["base-small"].startServer();
-    if (serverSmallStarted) {
+    const serversStarted = await Promise.all(
+      [
+        ...new Set([
+          configuration.get("completion.autoMode"),
+          configuration.get("completion.manuallyMode"),
+        ]),
+      ].map((serverType) => servers[serverType].startServer())
+    );
+
+    if (serversStarted.some((serverStarted) => serverStarted)) {
       Logger.info("Server inited", {
         component: "main",
         sendTelemetry: true,
