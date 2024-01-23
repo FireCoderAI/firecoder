@@ -6,6 +6,7 @@ import { getInlineCompletionProvider } from "./common/completion";
 import { FirecoderTelemetrySenderInstance } from "./common/telemetry";
 import { configuration } from "./common/utils/configuration";
 import { state } from "./common/utils/state";
+import { ChatPanel } from "./common/panel/chat";
 
 export async function activate(context: vscode.ExtensionContext) {
   FirecoderTelemetrySenderInstance.init(context);
@@ -17,6 +18,13 @@ export async function activate(context: vscode.ExtensionContext) {
     component: "main",
     sendTelemetry: true,
   });
+
+  const provider = new ChatPanel(context.extensionUri);
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider("firecoder.chat-gui", provider, {
+      webviewOptions: { retainContextWhenHidden: true },
+    })
+  );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
@@ -49,40 +57,44 @@ export async function activate(context: vscode.ExtensionContext) {
     sendTelemetry: true,
   });
 
-  try {
-    const serversStarted = await Promise.all(
-      [
-        ...new Set([
-          configuration.get("completion.autoMode"),
-          configuration.get("completion.manuallyMode"),
-          "chat-large" as const,
-        ]),
-      ].map((serverType) => servers[serverType].startServer())
-    );
+  (async () => {
+    try {
+      const serversStarted = await Promise.all(
+        [
+          ...new Set([
+            configuration.get("completion.autoMode"),
+            configuration.get("completion.manuallyMode"),
+            ...(configuration.get("experimental.chat")
+              ? ["chat-medium" as const]
+              : []),
+          ]),
+        ].map((serverType) => servers[serverType].startServer())
+      );
 
-    if (serversStarted.some((serverStarted) => serverStarted)) {
-      Logger.info("Server inited", {
-        component: "main",
+      if (serversStarted.some((serverStarted) => serverStarted)) {
+        Logger.info("Server inited", {
+          component: "main",
+          sendTelemetry: true,
+        });
+        const InlineCompletionProvider = getInlineCompletionProvider(context);
+        vscode.languages.registerInlineCompletionItemProvider(
+          { pattern: "**" },
+          InlineCompletionProvider
+        );
+      }
+    } catch (error) {
+      vscode.window.showErrorMessage((error as Error).message);
+      Logger.error(error, {
+        component: "server",
         sendTelemetry: true,
       });
-      const InlineCompletionProvider = getInlineCompletionProvider(context);
-      vscode.languages.registerInlineCompletionItemProvider(
-        { pattern: "**" },
-        InlineCompletionProvider
-      );
     }
-  } catch (error) {
-    vscode.window.showErrorMessage((error as Error).message);
-    Logger.error(error, {
-      component: "server",
+
+    Logger.info("FireCoder is ready.", {
+      component: "main",
       sendTelemetry: true,
     });
-  }
-
-  Logger.info("FireCoder is ready.", {
-    component: "main",
-    sendTelemetry: true,
-  });
+  })();
 }
 
 export function deactivate() {

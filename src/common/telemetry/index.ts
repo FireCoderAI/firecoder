@@ -8,6 +8,7 @@ import {
   initializeFaro,
 } from "@grafana/faro-core";
 import { FetchTransport } from "@grafana/faro-web-sdk";
+import Logger from "../logger";
 
 type Properties = {
   extensionversion: string;
@@ -28,35 +29,39 @@ class FirecoderTelemetrySender implements vscode.TelemetrySender {
 
   public init(context: vscode.ExtensionContext) {
     this.properties = this.getProperties(context);
-    this.faro = initializeFaro({
-      app: {
-        name: "firecoder-vscode",
-        version: "1.0.0",
-        environment: "production",
-      },
-      transports: [
-        new FetchTransport({
-          url: "https://faro-collector-prod-eu-west-0.grafana.net/collect/33a834c252bb6b780b5d242def445bbd",
-        }),
-      ],
-      sessionTracking: {
-        enabled: false,
-      },
-      dedupe: false,
-      globalObjectKey: "firecoder-vscode",
-      internalLoggerLevel: InternalLoggerLevel.ERROR,
-      isolate: true,
-      instrumentations: [],
-      metas: [],
-      parseStacktrace: function (err: ExtendedError): Stacktrace {
-        return {
-          frames: [],
-        };
-      },
-      paused: false,
-      preventGlobalExposure: false,
-      unpatchedConsole: console,
-    });
+    try {
+      this.faro = initializeFaro({
+        app: {
+          name: "firecoder-vscode",
+          version: "1.0.0",
+          environment: "production",
+        },
+        transports: [
+          new FetchTransport({
+            url: "https://faro-collector-prod-eu-west-0.grafana.net/collect/33a834c252bb6b780b5d242def445bbd",
+          }),
+        ],
+        sessionTracking: {
+          enabled: false,
+        },
+        dedupe: false,
+        globalObjectKey: "firecoder-vscode",
+        internalLoggerLevel: InternalLoggerLevel.ERROR,
+        isolate: true,
+        instrumentations: [],
+        metas: [],
+        parseStacktrace: function (err: ExtendedError): Stacktrace {
+          return {
+            frames: [],
+          };
+        },
+        paused: false,
+        preventGlobalExposure: false,
+        unpatchedConsole: console,
+      });
+    } catch (error) {
+      Logger.error(error);
+    }
   }
 
   private getProperties(context: vscode.ExtensionContext) {

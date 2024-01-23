@@ -11,6 +11,9 @@ const ConfigurationProperties = {
   "experimental.useGpu.osx.metal": {
     default: false,
   },
+  "experimental.chat": {
+    default: false,
+  },
   "completion.autoMode": {
     default: "base-small",
   },
@@ -28,6 +31,9 @@ interface ConfigurationPropertiesType
     possibleValues: boolean;
   };
   "experimental.useGpu.osx.metal": {
+    possibleValues: boolean;
+  };
+  "experimental.chat": {
     possibleValues: boolean;
   };
   "completion.autoMode": {

@@ -11,6 +11,7 @@
   "engines": {
     "vscode": "^1.84.0"
   },
+  "icon": "images/firecoder-icon.png",
   "categories": [
     "Machine Learning",
     "Programming Languages",
@@ -31,6 +32,25 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "views": {
+      "firecoder": [
+        {
+          "type": "webview",
+          "id": "firecoder.chat-gui",
+          "name": "",
+          "visibility": "visible"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "firecoder",
+          "title": "Firecoder Chat",
+          "icon": "images/fc.svg"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "firecoder.inlineSuggest",
@@ -66,6 +86,11 @@
           "type": "boolean",
           "default": false,
           "description": "Use experimental GPU Metal support for macOS."
+        },
+        "firecoder.experimental.chat": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable experimental chat feature."
         },
         "firecoder.completion.autoMode": {
           "type": "string",
