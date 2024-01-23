@@ -1,0 +1,29 @@
+main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  height: 100%;
+}
+
+body {
+  padding: 0px;
+}
+
+.chat-history {
+  width: 100%;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+.chat-input {
+  height: 10vh;
+  display: flex;
+  flex-direction: row;
+  width: calc(100% - 40px);
+  justify-content: space-between;
+  align-items: center;
+  padding: 0px 20px;
+}
