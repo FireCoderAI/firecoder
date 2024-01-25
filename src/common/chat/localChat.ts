@@ -6,7 +6,7 @@ import statusBar from "../statusBar";
 const logCompletion = (uuid = randomUUID() as string) => {
   return {
     info: (text: any) =>
-      Logger.info(text, { component: `Completion: ${uuid.slice(-8)}` }),
+      Logger.info(text, { component: `Chat: ${uuid.slice(-8)}` }),
     uuid: () => uuid,
   };
 };
@@ -29,17 +29,14 @@ const defualtParameters = {
   mirostat: 0,
   mirostat_tau: 5,
   mirostat_eta: 0.1,
-  grammar: "",
   n_probs: 0,
-  image_data: [],
-  cache_prompt: false,
+  cache_prompt: true,
   slot_id: -1,
 };
 
-export const sendCompletionRequest = async (
+export const sendChatRequest = async (
   prompt: string,
   parameters: Record<string, any>,
-  abortController: AbortController,
   uuid: string,
   url: string
 ) => {
@@ -60,7 +57,6 @@ export const sendCompletionRequest = async (
     const response = await fetch(`${url}/completion`, {
       body: JSON.stringify(parametersForCompletion),
       method: "POST",
-      signal: abortController.signal,
     });
 
     if (!response.ok) {

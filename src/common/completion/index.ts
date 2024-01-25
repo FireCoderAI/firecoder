@@ -1,9 +1,9 @@
 import * as vscode from "vscode";
 import { randomUUID } from "crypto";
-import { getPrompt } from "../prompt";
+import { getPromptCompletion } from "../prompt";
 import { abortInterval, delay } from "../utils/intervals";
 import Logger from "../logger";
-import { sendCompletion } from "./localCompletion";
+import { sendCompletionRequest } from "./localCompletion";
 import { servers } from "../server";
 import { configuration } from "../utils/configuration";
 
@@ -55,7 +55,7 @@ export const getInlineCompletionProvider = (
       const modelType = triggerAuto
         ? configuration.get("completion.autoMode")
         : configuration.get("completion.manuallyMode");
-      const prompt = await getPrompt(
+      const prompt = await getPromptCompletion(
         document,
         position,
         triggerAuto ? maxToken : 1000,
@@ -82,7 +82,7 @@ export const getInlineCompletionProvider = (
           }
         );
 
-        const completion = await sendCompletion(
+        const completion = await sendCompletionRequest(
           prompt,
           parameters,
           abortController,

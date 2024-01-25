@@ -12,6 +12,7 @@ import type { WebviewApi } from "vscode-webview";
  */
 class VSCodeAPIWrapper {
   private readonly vsCodeApi: WebviewApi<unknown> | undefined;
+  private messageCallback: Record<string, any> = {};
 
   constructor() {
     // Check if the acquireVsCodeApi function exists in the current development
@@ -19,6 +20,17 @@ class VSCodeAPIWrapper {
     if (typeof acquireVsCodeApi === "function") {
       this.vsCodeApi = acquireVsCodeApi();
     }
+    window.addEventListener("message", (message) => {
+      if (message?.data?.messageId in this.messageCallback) {
+        this.messageCallback[message?.data?.messageId](message?.data?.data);
+      }
+    });
+  }
+
+  private async response(messageId: string) {
+    return new Promise((res, rej) => {
+      this.messageCallback[messageId] = res;
+    });
   }
 
   /**
@@ -29,9 +41,15 @@ class VSCodeAPIWrapper {
    *
    * @param message Abitrary data (must be JSON serializable) to send to the extension context.
    */
-  public postMessage(message: unknown) {
+  public async postMessage(message: { type: string; data: any }) {
     if (this.vsCodeApi) {
-      this.vsCodeApi.postMessage(message);
+      // @ts-ignore
+      const messageId = global.crypto.randomUUID();
+      this.vsCodeApi.postMessage({
+        ...message,
+        messageId,
+      });
+      return this.response(messageId);
     } else {
       console.log(message);
     }
