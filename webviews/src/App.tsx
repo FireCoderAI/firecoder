@@ -1,28 +1,27 @@
 import { vscode } from "./utilities/vscode";
 import { VSCodeButton, VSCodeTextArea } from "@vscode/webview-ui-toolkit/react";
 import "./App.css";
+import "./codicon.css";
 import { ChatMessage } from "./components/ChatMessage";
 import { useState } from "react";
 
 export const App = () => {
-  function handleHowdyClick() {
-    vscode.postMessage({
-      command: "hello",
-      text: "Hey there partner! 🤠",
-    });
-  }
-
   const [input, setInput] = useState("");
-  const [chatHistory, setChatHistory] = useState([
+  const [chatHistory, setChatHistory] = useState<
     {
-      role: "user",
-      content: "just message",
-    },
-    {
-      role: "ai",
-      content: "just message",
-    },
-  ]);
+      role: string;
+      content: string;
+    }[]
+  >([]);
+
+  const handleHowdyClick = async (chatHistoryLocal: any) => {
+    const newMessage = await vscode.postMessage({
+      type: "sendMessage",
+      data: chatHistoryLocal,
+    });
+    setChatHistory((value) => [...value, newMessage as any]);
+    console.log(newMessage);
+  };
 
   return (
     <main>
@@ -32,7 +31,7 @@ export const App = () => {
         ))}
       </div>
       <div
-        className="chat-input"
+        className="chat-input-block"
         onSubmit={() => {
           setChatHistory((value) => [
             ...value,
@@ -47,18 +46,23 @@ export const App = () => {
             // @ts-ignore
             setInput(e?.target?.value || "");
           }}
+          className="chat-input"
         ></VSCodeTextArea>
+
         <VSCodeButton
           appearance="primary"
           onClick={() => {
-            setChatHistory((value) => [
-              ...value,
-              { role: "user", content: input },
-            ]);
+            setChatHistory((value) => {
+              const newHistory = [...value, { role: "user", content: input }];
+
+              handleHowdyClick(newHistory);
+
+              return newHistory;
+            });
             setInput("");
           }}
         >
-          Button Text
+          Submit
         </VSCodeButton>
       </div>
     </main>

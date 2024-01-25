@@ -2,6 +2,7 @@ import { Disposable, Webview, window, Uri } from "vscode";
 import * as vscode from "vscode";
 import { getUri } from "../utils/getUri";
 import { getNonce } from "../utils/getNonce";
+import { chat } from "../chat";
 
 export class ChatPanel implements vscode.WebviewViewProvider {
   private disposables: Disposable[] = [];
@@ -42,6 +43,13 @@ export class ChatPanel implements vscode.WebviewViewProvider {
       "main.js",
     ]);
 
+    const codiconFontUri = getUri(webview, extensionUri, [
+      "webview-ui",
+      "build",
+      "assets",
+      "codicon.ttf",
+    ]);
+
     const nonce = getNonce();
 
     return `
@@ -54,6 +62,13 @@ export class ChatPanel implements vscode.WebviewViewProvider {
           <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
           <link rel="stylesheet" type="text/css" href="${stylesUri}">
           <title>FireCoder Chat</title>
+          <style nonce="${nonce}">
+            @font-face {
+              font-family: "codicon";
+              font-display: block;
+              src: url("${codiconFontUri}") format("truetype");
+            }
+          </style>
         </head>
         <body>
           <noscript>You need to enable JavaScript to run this app.</noscript>
@@ -66,13 +81,21 @@ export class ChatPanel implements vscode.WebviewViewProvider {
 
   private setWebviewMessageListener(webview: Webview) {
     webview.onDidReceiveMessage(
-      (message: any) => {
-        const command = message.command;
-        const text = message.text;
+      async (message: any) => {
+        const sendResponse = (messageToResponse: any) => {
+          webview.postMessage({
+            messageId: message.messageId,
+            data: messageToResponse,
+          });
+        };
+        const type = message.type;
+        const data = message.data;
 
-        switch (command) {
-          case "hello":
-            window.showInformationMessage(text);
+        switch (type) {
+          case "sendMessage":
+            const response = await chat(data);
+            window.showInformationMessage(data);
+            sendResponse(response);
             return;
         }
       },

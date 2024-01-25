@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import Logger from "./logger";
+import Logger from "../logger";
 
 const tokenize = async (text: string, url: string) => {
   try {
@@ -26,7 +26,7 @@ const tokenize = async (text: string, url: string) => {
   }
 };
 
-export const getPrompt = async (
+export const getPromptCompletion = async (
   document: vscode.TextDocument,
   position: vscode.Position,
   maxTokenExpect = 200,
