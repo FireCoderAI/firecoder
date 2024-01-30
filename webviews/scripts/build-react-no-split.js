@@ -22,7 +22,7 @@ config.optimization.splitChunks = {
 
 // Disable code chunks
 config.optimization.runtimeChunk = false;
-
+config.optimization.minimize = false;
 // Rename main.{hash}.js to main.js
 config.output.filename = "static/js/[name].js";
 

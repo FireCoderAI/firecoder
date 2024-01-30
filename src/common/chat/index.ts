@@ -15,7 +15,7 @@ const logCompletion = () => {
   };
 };
 
-export const chat = async (history: HistoryMessage[]) => {
+export async function* chat(history: HistoryMessage[]) {
   const loggerCompletion = logCompletion();
 
   loggerCompletion.info("Chat: started");
@@ -34,22 +34,22 @@ export const chat = async (history: HistoryMessage[]) => {
       sendTelemetry: true,
     });
 
-    const chatResponse = await sendChatRequest(
+    yield* sendChatRequest(
       prompt,
       parameters,
       loggerCompletion.uuid(),
       servers["chat-medium"].serverUrl
     );
 
-    if (chatResponse === null) {
-      return [];
-    }
+    // if (chatResponse === null) {
+    //   return [];
+    // }
 
     loggerCompletion.info("Request: finished");
-    return {
-      role: "ai",
-      content: chatResponse.content,
-    };
+    // return {
+    //   role: "ai",
+    //   content: chatResponse.content,
+    // };
   } catch (error) {
     const Error = error as Error;
     Logger.error(error);
@@ -57,4 +57,4 @@ export const chat = async (history: HistoryMessage[]) => {
     const errorMessage = Error.message;
     vscode.window.showErrorMessage(errorMessage);
   }
-};
+}

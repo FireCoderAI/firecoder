@@ -93,9 +93,9 @@ export class ChatPanel implements vscode.WebviewViewProvider {
 
         switch (type) {
           case "sendMessage":
-            const response = await chat(data);
-            window.showInformationMessage(data);
-            sendResponse(response);
+            for await (const message of chat(data)) {
+              sendResponse(message);
+            }
             return;
         }
       },

@@ -61,6 +61,10 @@ export const sendCompletionRequest = async (
       body: JSON.stringify(parametersForCompletion),
       method: "POST",
       signal: abortController.signal,
+      headers: {
+        Connection: "keep-alive",
+        "Content-Type": "application/json",
+      },
     });
 
     if (!response.ok) {

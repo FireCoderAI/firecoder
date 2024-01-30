@@ -11,16 +11,47 @@ export const App = () => {
     {
       role: string;
       content: string;
+      chatMessageId: string;
     }[]
   >([]);
 
   const handleHowdyClick = async (chatHistoryLocal: any) => {
-    const newMessage = await vscode.postMessage({
-      type: "sendMessage",
-      data: chatHistoryLocal,
-    });
-    setChatHistory((value) => [...value, newMessage as any]);
-    console.log(newMessage);
+    // @ts-ignore
+    const messageId = global.crypto.randomUUID();
+    await vscode.postMessageGenerator(
+      {
+        type: "sendMessage",
+        data: chatHistoryLocal,
+      },
+      (newMessage) => {
+        console.log(newMessage);
+        setChatHistory((chatHistoryLocal) => {
+          const messages = chatHistoryLocal.filter(
+            (message) => message.chatMessageId !== messageId
+          );
+          return [
+            ...messages,
+            {
+              role: "ai",
+              content: newMessage.data,
+              chatMessageId: messageId,
+            } as any,
+          ];
+        });
+      }
+    );
+    // for await (const newMessage of vscode.postMessageGenerator({
+    //   type: "sendMessage",
+    //   data: chatHistoryLocal,
+    // })) {
+    //   console.log(newMessage);
+    //   setChatHistory((chatHistoryLocal) => {
+    //     const messages = chatHistoryLocal.filter(
+    //       (message) => message.chatMessageId !== messageId
+    //     );
+    //     return [...messages, { ...newMessage, messageId } as any];
+    //   });
+    // }
   };
 
   return (
@@ -33,11 +64,11 @@ export const App = () => {
       <div
         className="chat-input-block"
         onSubmit={() => {
-          setChatHistory((value) => [
-            ...value,
-            { role: "user", content: input },
-          ]);
-          setInput("");
+          // setChatHistory((value) => [
+          //   ...value,
+          //   { role: "user", content: input },
+          // ]);
+          // setInput("");
         }}
       >
         <VSCodeTextArea
@@ -53,7 +84,13 @@ export const App = () => {
           appearance="primary"
           onClick={() => {
             setChatHistory((value) => {
-              const newHistory = [...value, { role: "user", content: input }];
+              // @ts-ignore
+              const messageId = global.crypto.randomUUID();
+
+              const newHistory = [
+                ...value,
+                { role: "user", content: input, chatMessageId: messageId },
+              ];
 
               handleHowdyClick(newHistory);
 

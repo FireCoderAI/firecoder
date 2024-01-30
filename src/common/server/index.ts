@@ -7,10 +7,6 @@ import statusBar from "../statusBar";
 import { FirecoderTelemetrySenderInstance } from "../telemetry";
 import { configuration } from "../utils/configuration";
 
-const osplatform = os.platform();
-const osmachine = os.machine();
-const isMacArm64 = osplatform === "darwin" && osmachine === "arm64";
-
 const modelsBase = {
   "base-small": {
     port: 39720,
@@ -60,6 +56,11 @@ class Server {
   }
 
   public async startServer() {
+    const osplatform = os.platform();
+    const osmachine = os.machine();
+    const isMacArm64 = osplatform === "darwin" && osmachine === "arm64";
+    const isBaseModel = Object.keys(modelsBase).includes(this.typeModel);
+
     const serverIsStarted = await this.checkServerStatus();
     if (serverIsStarted) {
       Logger.info("Server is started already.", {
@@ -102,6 +103,7 @@ class Server {
       component: "server",
       sendTelemetry: true,
     });
+
     const useGPU =
       configuration.get("experimental.useGpu.linux.nvidia") ||
       configuration.get("experimental.useGpu.osx.metal") ||
@@ -115,13 +117,12 @@ class Server {
         modelPath,
         "--port",
         String(port),
-        "--parallel",
-        "4",
         "--ctx-size",
         "4096",
         "--cont-batching",
         "--embedding",
         "--log-disable",
+        ...(isBaseModel ? ["--parallel", "4"] : []),
         ...(isMacArm64 ? ["--nobrowser"] : []),
         ...(useGPU ? ["--n-gpu-layers", "100"] : []),
       ],
