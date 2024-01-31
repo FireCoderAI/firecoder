@@ -1,9 +1,11 @@
 import crypto from "node:crypto";
-import { homedir } from "node:os";
+import * as os from "node:os";
 import path from "node:path";
 import fsPromise from "node:fs/promises";
 import fs from "node:fs";
-import Logger from "../logger";
+import child_process from "node:child_process";
+import { promisify } from "node:util";
+const exec = promisify(child_process.exec);
 
 export const checkFileOrFolderExists = async (pathToCheck: string) => {
   try {
@@ -15,7 +17,7 @@ export const checkFileOrFolderExists = async (pathToCheck: string) => {
 };
 
 export const getSaveFolder = async () => {
-  const pathSaveFolder = path.join(homedir(), ".firecoder");
+  const pathSaveFolder = path.join(os.homedir(), ".firecoder");
 
   const folderIsExist = await checkFileOrFolderExists(pathSaveFolder);
 
@@ -27,7 +29,33 @@ export const getSaveFolder = async () => {
 };
 
 export const getChecksum = async (path: string) => {
-  // TODO: Use sha256sum
+  const osplatform = os.platform();
+  const isLinux = osplatform === "linux";
+  const isWindows = osplatform === "win32";
+  try {
+    if (isLinux) {
+      const hashOutput = await exec(`sha256sum ${path} | awk '{ print $1 }'`);
+
+      return hashOutput.stdout.trim();
+    }
+
+    if (isWindows) {
+      const hashOutput = await exec(
+        `$(CertUtil -hashfile ${path} SHA256)[1] -replace " ",""`,
+        { shell: "powershell.exe" }
+      );
+
+      return hashOutput.stdout.replace("\r\n", "").trim();
+    }
+
+    // fallback to default method
+    return await getCheckSumNode(path);
+  } catch (error) {
+    return await getCheckSumNode(path);
+  }
+};
+
+const getCheckSumNode = async (path: string) => {
   return await new Promise((res, rej) => {
     try {
       const fsStream = fs.createReadStream(path);
