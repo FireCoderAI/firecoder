@@ -1,18 +1,16 @@
 import { randomUUID } from "node:crypto";
 import * as vscode from "vscode";
+import { state } from "./utils/state";
 
 class StatusBar {
   private activeTasks: Set<string> = new Set();
   private error: string | null = null;
   private statusBar: vscode.StatusBarItem | null = null;
-  private workspaceState: vscode.Memento | null = null;
   public init(context: vscode.ExtensionContext) {
     this.statusBar = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Right,
       100
     );
-
-    this.workspaceState = context.workspaceState;
 
     this.statusBar.command = "firecoder.changeInlineSuggestMode";
     context.subscriptions.push(this.statusBar);
@@ -68,14 +66,10 @@ class StatusBar {
   }
 
   private getInlineSuggestMode() {
-    if (this.workspaceState !== null) {
-      const currentInlineSuggestModeAuto = this.workspaceState.get(
-        "inlineSuggestModeAuto",
-        true
-      );
-      return currentInlineSuggestModeAuto;
-    }
-    return true;
+    const currentInlineSuggestModeAuto = state.workspace.get(
+      "inlineSuggestModeAuto"
+    );
+    return currentInlineSuggestModeAuto;
   }
   private getInlineSuggestModeIcon() {
     if (this.getInlineSuggestMode()) {

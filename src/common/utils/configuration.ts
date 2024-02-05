@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { TypeModel, TypeModelsBase } from "../server";
+import { TypeModelsBase } from "../server";
 
 const ConfigurationProperties = {
   "experimental.useGpu.windows.nvidia": {

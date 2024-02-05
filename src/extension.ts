@@ -5,10 +5,13 @@ import statusBar from "./common/statusBar";
 import { getInlineCompletionProvider } from "./common/completion";
 import { FirecoderTelemetrySenderInstance } from "./common/telemetry";
 import { configuration } from "./common/utils/configuration";
+import { state } from "./common/utils/state";
 
 export async function activate(context: vscode.ExtensionContext) {
   FirecoderTelemetrySenderInstance.init(context);
   vscode.env.createTelemetryLogger(FirecoderTelemetrySenderInstance);
+  state.global.init(context.globalState);
+  state.workspace.init(context.workspaceState);
 
   Logger.info("FireCoder is starting.", {
     component: "main",
@@ -19,11 +22,10 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "firecoder.changeInlineSuggestMode",
       async () => {
-        const currentInlineSuggestModeAuto = context.workspaceState.get(
-          "inlineSuggestModeAuto",
-          true
+        const currentInlineSuggestModeAuto = state.workspace.get(
+          "inlineSuggestModeAuto"
         );
-        await context.workspaceState.update(
+        await state.workspace.update(
           "inlineSuggestModeAuto",
           !currentInlineSuggestModeAuto
         );
