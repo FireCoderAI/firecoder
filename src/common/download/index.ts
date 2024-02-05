@@ -9,15 +9,16 @@ import { createProgress } from "../utils/progress";
 import { formatBytes } from "../utils/formatBytes";
 import { checkFileOrFolderExists, getChecksum, getSaveFolder } from "./utils";
 import Logger from "../logger";
-import { TypeModel } from "../server";
+import type { TypeModel } from "../server";
 import { configuration } from "../utils/configuration";
+import { state } from "../utils/state";
 
 interface ResourceInfo {
   url: string;
   checksum: string;
 }
 
-interface Spec {
+export interface Spec {
   linux: {
     "x86-64": {
       cpu: ResourceInfo;
@@ -84,16 +85,25 @@ const downloadFileWithProgress = async (
 const getServerInfo = async (): Promise<ResourceInfo | null> => {
   const osplatform = os.platform();
   const osmachine = os.machine();
+  let spec: Spec | null = null;
+  try {
+    const response = await fetch(
+      "https://pub-ad9e0b7360bc4259878d0f81b89c5405.r2.dev/spec.json"
+    );
 
-  const response = await fetch(
-    "https://pub-ad9e0b7360bc4259878d0f81b89c5405.r2.dev/spec.json"
-  );
+    if (!response.ok) {
+      return null;
+    }
 
-  if (!response.ok) {
+    spec = (await response.json()) as Spec;
+    await state.global.update("serverSpec", spec);
+  } catch (error) {
+    spec = state.global.get("serverSpec");
+    Logger.warn(`Can not get server spec`);
+  }
+  if (spec === null) {
     return null;
   }
-
-  const spec = (await response.json()) as Spec;
 
   if (osplatform === "win32") {
     if (osmachine === "x86_64") {

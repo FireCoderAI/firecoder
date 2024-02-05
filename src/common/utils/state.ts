@@ -1,14 +1,21 @@
 import * as vscode from "vscode";
+import type { Spec } from "../download";
 
 const StateValues = {
   inlineSuggestModeAuto: {
     default: true,
+  },
+  serverSpec: {
+    default: null,
   },
 };
 
 interface StateValuesType extends Record<keyof typeof StateValues, any> {
   inlineSuggestModeAuto: {
     possibleValues: boolean;
+  };
+  serverSpec: {
+    possibleValues: Spec | null;
   };
 }
 class State {
