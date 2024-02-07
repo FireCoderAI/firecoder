@@ -4,6 +4,8 @@ import "./App.css";
 import "./codicon.css";
 import { ChatMessage } from "./components/ChatMessage";
 import { useState } from "react";
+import { ChatHelloMessage } from "./components/ChatHelloMessage";
+import { useMessageListener } from "./hooks/messageListener";
 
 export const App = () => {
   const [input, setInput] = useState("");
@@ -15,16 +17,19 @@ export const App = () => {
     }[]
   >([]);
 
-  const handleHowdyClick = async (chatHistoryLocal: any) => {
+  useMessageListener("startNewChat", () => {
+    setChatHistory([]);
+  });
+
+  const sendMessage = async (chatHistoryLocal: any) => {
     // @ts-ignore
     const messageId = global.crypto.randomUUID();
-    await vscode.postMessageGenerator(
+    await vscode.postMessageCallback(
       {
         type: "sendMessage",
         data: chatHistoryLocal,
       },
       (newMessage) => {
-        console.log(newMessage);
         setChatHistory((chatHistoryLocal) => {
           const messages = chatHistoryLocal.filter(
             (message) => message.chatMessageId !== messageId
@@ -40,37 +45,17 @@ export const App = () => {
         });
       }
     );
-    // for await (const newMessage of vscode.postMessageGenerator({
-    //   type: "sendMessage",
-    //   data: chatHistoryLocal,
-    // })) {
-    //   console.log(newMessage);
-    //   setChatHistory((chatHistoryLocal) => {
-    //     const messages = chatHistoryLocal.filter(
-    //       (message) => message.chatMessageId !== messageId
-    //     );
-    //     return [...messages, { ...newMessage, messageId } as any];
-    //   });
-    // }
   };
 
   return (
     <main>
       <div className="chat-history">
+        <ChatHelloMessage />
         {chatHistory.map((item) => (
-          <ChatMessage role={item.role} content={item.content}></ChatMessage>
+          <ChatMessage role={item.role} content={item.content} />
         ))}
       </div>
-      <div
-        className="chat-input-block"
-        onSubmit={() => {
-          // setChatHistory((value) => [
-          //   ...value,
-          //   { role: "user", content: input },
-          // ]);
-          // setInput("");
-        }}
-      >
+      <div className="chat-input-block">
         <VSCodeTextArea
           value={input}
           onInput={(e) => {
@@ -92,7 +77,7 @@ export const App = () => {
                 { role: "user", content: input, chatMessageId: messageId },
               ];
 
-              handleHowdyClick(newHistory);
+              sendMessage(newHistory);
 
               return newHistory;
             });
