@@ -32,6 +32,14 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "menus": {
+      "view/title": [
+        {
+          "command": "firecoder.startNewChat",
+          "group": "navigation@1"
+        }
+      ]
+    },
     "views": {
       "firecoder": [
         {
@@ -55,6 +63,11 @@
       {
         "command": "firecoder.inlineSuggest",
         "title": "My Inline Completion Demo Settings"
+      },
+      {
+        "command": "firecoder.startNewChat",
+        "title": "New Chat",
+        "icon": "$(add)"
       }
     ],
     "keybindings": [

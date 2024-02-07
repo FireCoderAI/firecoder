@@ -26,6 +26,8 @@ export async function activate(context: vscode.ExtensionContext) {
     })
   );
 
+  statusBar.init(context);
+
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "firecoder.changeInlineSuggestMode",
@@ -43,19 +45,18 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
+    vscode.commands.registerCommand("firecoder.startNewChat", async () => {
+      provider.sendMessageToWebview("startNewChat", {});
+    })
+  );
+
+  context.subscriptions.push(
     vscode.commands.registerCommand("firecoder.inlineSuggest", async () => {
       await vscode.commands.executeCommand(
         "editor.action.inlineSuggest.trigger"
       );
     })
   );
-
-  statusBar.init(context);
-
-  Logger.info("Status Bad inited", {
-    component: "main",
-    sendTelemetry: true,
-  });
 
   (async () => {
     try {

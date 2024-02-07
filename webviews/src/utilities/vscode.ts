@@ -11,6 +11,11 @@ class VSCodeAPIWrapper {
     window.addEventListener("message", (message) => {
       if (message?.data?.messageId in this.messageCallback) {
         this.messageCallback[message?.data?.messageId](message?.data?.data);
+      } else if (
+        message?.data?.type === "c2w" &&
+        message?.data?.command in this.messageCallback
+      ) {
+        this.messageCallback[message?.data?.command](message?.data?.data);
       }
     });
   }
@@ -35,18 +40,7 @@ class VSCodeAPIWrapper {
     }
   }
 
-  private async *responseGenerator(messageId: string) {
-    while (true) {
-      // @ts-ignore
-      const message = yield;
-      if (message?.data?.messageId === messageId) {
-        debugger;
-        yield message.data;
-      }
-    }
-  }
-
-  public async postMessageGenerator(
+  public async postMessageCallback(
     message: { type: string; data: any },
     messageCallback: (message: any) => void
   ) {
@@ -65,6 +59,9 @@ class VSCodeAPIWrapper {
     } else {
       console.log(message);
     }
+  }
+  public addMessageListener(command: string, callback: (message: any) => void) {
+    this.messageCallback[command] = callback;
   }
 }
 

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import * as vscode from "vscode";
 import { state } from "./utils/state";
+import Logger from "./logger";
 
 class StatusBar {
   private activeTasks: Set<string> = new Set();
@@ -18,6 +19,11 @@ class StatusBar {
     setInterval(() => {
       this.checkProgress();
     }, 50);
+
+    Logger.info("Status Bar inited", {
+      component: "main",
+      sendTelemetry: true,
+    });
   }
   public startTask() {
     const uuid = randomUUID();

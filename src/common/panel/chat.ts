@@ -6,14 +6,12 @@ import { chat } from "../chat";
 
 export class ChatPanel implements vscode.WebviewViewProvider {
   private disposables: Disposable[] = [];
+  private webview: Webview | undefined;
 
   constructor(private readonly extensionUri: vscode.Uri) {}
 
-  public resolveWebviewView(
-    webviewView: vscode.WebviewView,
-    context: vscode.WebviewViewResolveContext,
-    _token: vscode.CancellationToken
-  ) {
+  public resolveWebviewView(webviewView: vscode.WebviewView) {
+    this.webview = webviewView.webview;
     webviewView.webview.options = {
       enableScripts: true,
       localResourceRoots: [this.extensionUri],
@@ -84,6 +82,7 @@ export class ChatPanel implements vscode.WebviewViewProvider {
       async (message: any) => {
         const sendResponse = (messageToResponse: any) => {
           webview.postMessage({
+            type: "response",
             messageId: message.messageId,
             data: messageToResponse,
           });
@@ -102,5 +101,9 @@ export class ChatPanel implements vscode.WebviewViewProvider {
       undefined,
       this.disposables
     );
+  }
+
+  public sendMessageToWebview(command: string, data: any) {
+    this.webview?.postMessage({ type: "c2w", command: command, data });
   }
 }
