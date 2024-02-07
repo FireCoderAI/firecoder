@@ -7,7 +7,7 @@
   "bugs": "https://github.com/FireCoderAI/firecoder/issues",
   "publisher": "FireCoder",
   "license": "MIT",
-  "version": "0.0.21",
+  "version": "0.0.22",
   "engines": {
     "vscode": "^1.84.0"
   },
