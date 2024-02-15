@@ -11,6 +11,7 @@ import { tokenizer } from "./common/prompt/tokenizer";
 import { login } from "./common/auth";
 import { secretsStorage } from "./common/utils/secretStore";
 import { getSuppabaseClient } from "./common/auth/supabaseClient";
+import { startTest } from "./test";
 
 export async function activate(context: vscode.ExtensionContext) {
   FirecoderTelemetrySenderInstance.init(context);
@@ -40,6 +41,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   statusBar.init(context);
   await tokenizer.init();
+  startTest();
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
