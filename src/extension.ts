@@ -7,6 +7,7 @@ import { FirecoderTelemetrySenderInstance } from "./common/telemetry";
 import { configuration } from "./common/utils/configuration";
 import { state } from "./common/utils/state";
 import { ChatPanel } from "./common/panel/chat";
+import { startTest } from "./test";
 
 export async function activate(context: vscode.ExtensionContext) {
   FirecoderTelemetrySenderInstance.init(context);
@@ -27,6 +28,7 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   statusBar.init(context);
+  startTest();
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
