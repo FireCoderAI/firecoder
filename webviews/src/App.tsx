@@ -1,11 +1,19 @@
 import { vscode } from "./utilities/vscode";
-import { VSCodeButton, VSCodeTextArea } from "@vscode/webview-ui-toolkit/react";
+import {
+  VSCodeButton,
+  VSCodeProgressRing,
+  VSCodeTextArea,
+  VSCodeTextField,
+} from "@vscode/webview-ui-toolkit/react";
 import "./App.css";
-import "./codicon.css";
+// import "./codicon.css";
 import { ChatMessage } from "./components/ChatMessage";
 import { useState } from "react";
 import { ChatHelloMessage } from "./components/ChatHelloMessage";
 import { useMessageListener } from "./hooks/messageListener";
+import { randomMessageId } from "./utilities/messageId";
+import TextArea from "./components/TextArea";
+// import ProgressDivider from "./components/VsCodeDividerProgress";
 
 export const App = () => {
   const [input, setInput] = useState("");
@@ -16,14 +24,14 @@ export const App = () => {
       chatMessageId: string;
     }[]
   >([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useMessageListener("startNewChat", () => {
     setChatHistory([]);
   });
 
   const sendMessage = async (chatHistoryLocal: any) => {
-    // @ts-ignore
-    const messageId = global.crypto.randomUUID();
+    const messageId = randomMessageId();
     await vscode.postMessageCallback(
       {
         type: "sendMessage",
@@ -34,6 +42,12 @@ export const App = () => {
           const messages = chatHistoryLocal.filter(
             (message) => message.chatMessageId !== messageId
           );
+
+          if (newMessage.done) {
+            setIsLoading(false);
+            return chatHistoryLocal;
+          }
+
           return [
             ...messages,
             {
@@ -47,46 +61,61 @@ export const App = () => {
     );
   };
 
+  const onSubmit = () => {
+    if (isLoading) {
+      return;
+    }
+    setChatHistory((value) => {
+      const messageId = randomMessageId();
+
+      const newHistory = [
+        ...value,
+        {
+          role: "user",
+          content: input,
+          chatMessageId: messageId,
+        },
+      ];
+      setIsLoading(true);
+      sendMessage(newHistory);
+
+      return newHistory;
+    });
+    setInput("");
+  };
+
   return (
-    <main>
-      <div className="chat-history">
-        <ChatHelloMessage />
-        {chatHistory.map((item) => (
-          <ChatMessage role={item.role} content={item.content} />
-        ))}
-      </div>
-      <div className="chat-input-block">
-        <VSCodeTextArea
-          value={input}
-          onInput={(e) => {
-            // @ts-ignore
-            setInput(e?.target?.value || "");
-          }}
-          className="chat-input"
-        ></VSCodeTextArea>
-
-        <VSCodeButton
-          appearance="primary"
-          onClick={() => {
-            setChatHistory((value) => {
-              // @ts-ignore
-              const messageId = global.crypto.randomUUID();
-
-              const newHistory = [
-                ...value,
-                { role: "user", content: input, chatMessageId: messageId },
-              ];
-
-              sendMessage(newHistory);
-
-              return newHistory;
-            });
-            setInput("");
-          }}
-        >
-          Submit
-        </VSCodeButton>
-      </div>
-    </main>
+    <>
+      <main>
+        <div className="chat-history">
+          <ChatHelloMessage />
+          {chatHistory.map((item) => (
+            <ChatMessage role={item.role} content={item.content} />
+          ))}
+        </div>
+        <div className="chat-input-block">
+          <TextArea
+            value={input}
+            onChange={(value) => setInput(value || "")}
+            onSubmit={onSubmit}
+            buttonEnd={
+              <VSCodeButton
+                appearance="icon"
+                disabled={isLoading}
+                onClick={onSubmit}
+              >
+                <span
+                  className={`codicon ${
+                    isLoading
+                      ? "codicon-loading codicon-modifier-spin codicon-modifier-disabled"
+                      : "codicon-send"
+                  }`}
+                ></span>
+              </VSCodeButton>
+            }
+          ></TextArea>
+        </div>
+      </main>
+    </>
   );
 };

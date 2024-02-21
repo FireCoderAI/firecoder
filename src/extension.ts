@@ -46,7 +46,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand("firecoder.startNewChat", async () => {
-      provider.sendMessageToWebview("startNewChat", {});
+      await provider.sendMessageToWebview("startNewChat", {});
     })
   );
 

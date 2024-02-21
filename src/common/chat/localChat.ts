@@ -11,18 +11,10 @@ const logCompletion = (uuid = randomUUID() as string) => {
   };
 };
 
-class CustomEvent extends Event {
-  detail: any;
-  constructor(message: any, data: any) {
-    super(message, data);
-    this.detail = data.detail;
-  }
-}
-
 const defualtParameters = {
   stream: true,
-  n_predict: 128,
-  temperature: 0.3,
+  n_predict: 1024,
+  temperature: 0.7,
   stop: [],
   repeat_last_n: 256,
   repeat_penalty: 1.18,
@@ -62,15 +54,6 @@ export async function* sendChatRequest(
 
     const startTime = performance.now();
 
-    // const response = await fetch(`${url}/completion`, {
-    //   body: JSON.stringify(parametersForCompletion),
-    //   method: "POST",
-    //   headers: {
-    //     Connection: "keep-alive",
-    //     "Content-Type": "application/json",
-    //     Accept: "text/event-stream",
-    //   },
-    // });
     let content = "";
     let timings;
     for await (const chunk of llama(prompt, parametersForCompletion, { url })) {
@@ -80,15 +63,7 @@ export async function* sendChatRequest(
         content += chunk.data.content;
         yield content;
       }
-      // @ts-ignore
-      // if (chunk.data.generation_settings) {
-      //   eventTarget.dispatchEvent(
-      //     new CustomEvent("generation_settings", {
-      //       // @ts-ignore
-      //       detail: chunk.data.generation_settings,
-      //     })
-      //   );
-      // }
+
       // @ts-ignore
       if (chunk.data.timings) {
         // @ts-ignore
@@ -154,26 +129,18 @@ export async function* sendChatRequest(
   }
 }
 
-const paramDefaults = {
-  stream: true,
-  n_predict: 500,
-  temperature: 0.2,
-  // stop: ["</s>"],
-};
-
 export async function* llama(
   prompt: string,
   params = {},
   config: { controller?: AbortController; url?: string } = {}
 ) {
-  let generation_settings;
   let controller = config.controller;
 
   if (!controller) {
     controller = new AbortController();
   }
 
-  const completionParams = { ...paramDefaults, ...params, prompt };
+  const completionParams = { ...params, prompt };
 
   const response = await fetch(`${config.url}/completion`, {
     method: "POST",
@@ -183,7 +150,7 @@ export async function* llama(
       "Content-Type": "application/json",
       Accept: "text/event-stream",
     },
-    // signal: controller.signal,
+    signal: controller.signal,
   });
   // @ts-ignore
   const reader = response.body.getReader<any>();
@@ -241,10 +208,6 @@ export async function* llama(
             // @ts-ignore
             if (result.data.stop) {
               // @ts-ignore
-              if (result.data.generation_settings) {
-                // @ts-ignore
-                generation_settings = result.data.generation_settings;
-              }
               cont = false;
               break;
             }
@@ -284,39 +247,3 @@ export async function* llama(
 
   return content;
 }
-
-export const llamaEventTarget = (prompt: string, params = {}, config = {}) => {
-  const eventTarget = new EventTarget();
-  (async () => {
-    let content = "";
-    for await (const chunk of llama(prompt, params, config)) {
-      // @ts-ignore
-      if (chunk.data) {
-        // @ts-ignore
-        content += chunk.data.content;
-        eventTarget.dispatchEvent(
-          // @ts-ignore
-          new CustomEvent("message", { detail: chunk.data })
-        );
-      }
-      // @ts-ignore
-      if (chunk.data.generation_settings) {
-        eventTarget.dispatchEvent(
-          new CustomEvent("generation_settings", {
-            // @ts-ignore
-            detail: chunk.data.generation_settings,
-          })
-        );
-      }
-      // @ts-ignore
-      if (chunk.data.timings) {
-        eventTarget.dispatchEvent(
-          // @ts-ignore
-          new CustomEvent("timings", { detail: chunk.data.timings })
-        );
-      }
-    }
-    eventTarget.dispatchEvent(new CustomEvent("done", { detail: { content } }));
-  })();
-  return eventTarget;
-};

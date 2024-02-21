@@ -4,6 +4,21 @@ import { getUri } from "../utils/getUri";
 import { getNonce } from "../utils/getNonce";
 import { chat } from "../chat";
 
+export type MessageType =
+  | {
+      type: "e2w";
+      command: string;
+      done: boolean;
+      data: any;
+    }
+  | {
+      type: "e2w-response";
+      command: string;
+      messageId: string;
+      done: boolean;
+      data: any;
+    };
+
 export class ChatPanel implements vscode.WebviewViewProvider {
   private disposables: Disposable[] = [];
   private webview: Webview | undefined;
@@ -42,10 +57,15 @@ export class ChatPanel implements vscode.WebviewViewProvider {
     ]);
 
     const codiconFontUri = getUri(webview, extensionUri, [
-      "webview-ui",
+      "webviews",
       "build",
-      "assets",
       "codicon.ttf",
+    ]);
+
+    const codiconStyleUri = getUri(webview, extensionUri, [
+      "webviews",
+      "build",
+      "codicon.css",
     ]);
 
     const nonce = getNonce();
@@ -57,16 +77,10 @@ export class ChatPanel implements vscode.WebviewViewProvider {
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
           <meta name="theme-color" content="#000000">
-          <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+          <meta http-equiv="Content-Security-Policy" content="unsafe-inline; default-src 'none'; style-src ${webview.cspSource}; font-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+          <link rel="stylesheet" href="${codiconStyleUri}">
           <link rel="stylesheet" type="text/css" href="${stylesUri}">
           <title>FireCoder Chat</title>
-          <style nonce="${nonce}">
-            @font-face {
-              font-family: "codicon";
-              font-display: block;
-              src: url("${codiconFontUri}") format("truetype");
-            }
-          </style>
         </head>
         <body>
           <noscript>You need to enable JavaScript to run this app.</noscript>
@@ -80,11 +94,13 @@ export class ChatPanel implements vscode.WebviewViewProvider {
   private setWebviewMessageListener(webview: Webview) {
     webview.onDidReceiveMessage(
       async (message: any) => {
-        const sendResponse = (messageToResponse: any) => {
-          webview.postMessage({
-            type: "response",
+        const sendResponse = (messageToResponse: any, done: boolean) => {
+          this.postMessage({
+            type: "e2w-response",
+            command: message.type,
             messageId: message.messageId,
             data: messageToResponse,
+            done: done,
           });
         };
         const type = message.type;
@@ -93,8 +109,9 @@ export class ChatPanel implements vscode.WebviewViewProvider {
         switch (type) {
           case "sendMessage":
             for await (const message of chat(data)) {
-              sendResponse(message);
+              sendResponse(message, false);
             }
+            sendResponse("", true);
             return;
         }
       },
@@ -103,7 +120,20 @@ export class ChatPanel implements vscode.WebviewViewProvider {
     );
   }
 
-  public sendMessageToWebview(command: string, data: any) {
-    this.webview?.postMessage({ type: "c2w", command: command, data });
+  public async sendMessageToWebview(
+    command: MessageType["command"],
+    data: MessageType["data"]
+  ) {
+    const message: MessageType = {
+      type: "e2w",
+      command,
+      data,
+      done: true,
+    };
+    await this.postMessage(message);
+  }
+
+  private async postMessage(message: MessageType) {
+    await this.webview?.postMessage(message);
   }
 }

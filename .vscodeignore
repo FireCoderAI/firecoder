@@ -12,3 +12,5 @@ node_modules
 **/*.ts
 model.gguf
 ./server
+webviews/
+!webviews/build

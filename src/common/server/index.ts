@@ -110,6 +110,9 @@ class Server {
       configuration.get("experimental.useGpu.windows.nvidia");
 
     const port = models[this.typeModel].port;
+
+    const isChatModel = this.typeModel in modelsChat;
+
     this.serverProcess = spawn(
       serverPath,
       [
@@ -117,14 +120,13 @@ class Server {
         modelPath,
         "--port",
         String(port),
-        "--ctx-size",
-        "4096",
-        "--cont-batching",
-        "--embedding",
-        "--log-disable",
+        ...(isChatModel ? ["--ctx-size", "16384"] : ["--ctx-size", "4096"]),
         ...(isBaseModel ? ["--parallel", "4"] : []),
         ...(isMacArm64 ? ["--nobrowser"] : []),
         ...(useGPU ? ["--n-gpu-layers", "100"] : []),
+        "--cont-batching",
+        "--embedding",
+        "--log-disable",
       ],
       {
         detached: false,

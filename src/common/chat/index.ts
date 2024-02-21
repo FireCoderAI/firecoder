@@ -23,7 +23,7 @@ export async function* chat(history: HistoryMessage[]) {
   const prompt = await getPromptChat(history);
 
   const parameters = {
-    n_predict: 512,
+    n_predict: 8192,
     stop: [],
     temperature: 0.7,
   };
@@ -41,15 +41,7 @@ export async function* chat(history: HistoryMessage[]) {
       servers["chat-medium"].serverUrl
     );
 
-    // if (chatResponse === null) {
-    //   return [];
-    // }
-
     loggerCompletion.info("Request: finished");
-    // return {
-    //   role: "ai",
-    //   content: chatResponse.content,
-    // };
   } catch (error) {
     const Error = error as Error;
     Logger.error(error);

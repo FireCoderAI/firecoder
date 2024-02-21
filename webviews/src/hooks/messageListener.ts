@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { vscode } from "../utilities/vscode";
 
 export const useMessageListener = (
-  command: string,
+  command: "startNewChat",
   callback: (message: any) => void
 ) => {
   useEffect(() => {

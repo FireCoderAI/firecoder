@@ -1,4 +1,20 @@
 import type { WebviewApi } from "vscode-webview";
+import { randomMessageId } from "./messageId";
+
+export type MessageType =
+  | {
+      type: "e2w";
+      command: string;
+      done: boolean;
+      data: any;
+    }
+  | {
+      type: "e2w-response";
+      command: string;
+      messageId: string;
+      done: boolean;
+      data: any;
+    };
 
 class VSCodeAPIWrapper {
   private readonly vsCodeApi: WebviewApi<unknown> | undefined;
@@ -9,49 +25,35 @@ class VSCodeAPIWrapper {
       this.vsCodeApi = acquireVsCodeApi();
     }
     window.addEventListener("message", (message) => {
-      if (message?.data?.messageId in this.messageCallback) {
-        this.messageCallback[message?.data?.messageId](message?.data?.data);
-      } else if (
-        message?.data?.type === "c2w" &&
-        message?.data?.command in this.messageCallback
+      const newMessage = (message as MessageEvent<MessageType>).data;
+
+      if (
+        newMessage.type === "e2w-response" &&
+        newMessage.messageId in this.messageCallback
       ) {
-        this.messageCallback[message?.data?.command](message?.data?.data);
+        this.messageCallback[newMessage.messageId](newMessage);
+        return;
+      }
+
+      if (
+        newMessage.type === "e2w" &&
+        newMessage.command in this.messageCallback
+      ) {
+        this.messageCallback[newMessage.command](newMessage);
+        return;
       }
     });
   }
 
-  private async response(messageId: string) {
-    return new Promise((res, rej) => {
-      this.messageCallback[messageId] = res;
-    });
-  }
-
-  public async postMessage(message: { type: string; data: any }) {
-    if (this.vsCodeApi) {
-      // @ts-ignore
-      const messageId = global.crypto.randomUUID();
-      this.vsCodeApi.postMessage({
-        ...message,
-        messageId,
-      });
-      return await this.response(messageId);
-    } else {
-      console.log(message);
-    }
-  }
-
   public async postMessageCallback(
     message: { type: string; data: any },
-    messageCallback: (message: any) => void
+    messageCallback?: (message: any) => void
   ) {
     if (this.vsCodeApi) {
-      window.addEventListener("message", (message) => {
-        if (message?.data?.messageId === messageId) {
-          messageCallback(message?.data);
-        }
-      });
-      // @ts-ignore
-      const messageId = global.crypto.randomUUID();
+      const messageId = randomMessageId();
+      if (messageCallback) {
+        this.addMessageListener(messageId, messageCallback);
+      }
       this.vsCodeApi.postMessage({
         ...message,
         messageId,
@@ -60,8 +62,11 @@ class VSCodeAPIWrapper {
       console.log(message);
     }
   }
-  public addMessageListener(command: string, callback: (message: any) => void) {
-    this.messageCallback[command] = callback;
+  public addMessageListener(
+    commandOrMessageId: string,
+    callback: (message: any) => void
+  ) {
+    this.messageCallback[commandOrMessageId] = callback;
   }
 }
 
