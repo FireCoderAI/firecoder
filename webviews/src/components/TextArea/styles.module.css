@@ -1,0 +1,55 @@
+.root {
+  width: 100%;
+  display: flex;
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  color: var(--input-foreground);
+  background: var(--input-background);
+  border-radius: calc(var(--corner-radius-round) * 1px);
+  border: calc(var(--border-width) * 1px) solid var(--dropdown-border);
+  /* height: calc(var(--input-height) * 1px); */
+  min-width: var(--input-min-width);
+}
+
+
+.main {
+  box-sizing: border-box;
+  position: relative;
+  color: var(--input-foreground);
+  background: var(--input-background);
+  /* border-radius: calc(var(--corner-radius-round) * 1px); */
+  border: none;
+  /* border: calc(var(--border-width) * 1px) solid var(--dropdown-border); */
+  font-style: inherit;
+  font-variant: inherit;
+  font-weight: inherit;
+  font-stretch: inherit;
+  font-family: inherit;
+  font-optical-sizing: inherit;
+  font-kerning: inherit;
+  font-feature-settings: inherit;
+  font-variation-settings: inherit;
+  font-size: var(--type-ramp-base-font-size);
+  line-height: var(--type-ramp-base-line-height);
+  padding: calc(var(--design-unit) * 2px + 1px);
+  width: 100%;
+  min-width: var(--input-min-width);
+  resize: none;
+}
+
+.main:focus {
+  border-color: var(--focus-border);
+  outline: none;
+}
+
+.buttonStart {
+  margin-inline-start: calc(var(--design-unit) * 1px);
+}
+
+.buttonEnd {
+  display: flex;
+  align-items: center;
+  margin-inline-end: calc(var(--design-unit) * 1px);
+}

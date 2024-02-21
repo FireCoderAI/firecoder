@@ -1,6 +1,3 @@
-import * as vscode from "vscode";
-import Logger from "../logger";
-
 export type HistoryMessage = {
   role: string;
   content: string;

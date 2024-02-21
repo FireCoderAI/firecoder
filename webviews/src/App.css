@@ -15,17 +15,17 @@ body {
   overflow: auto;
   display: flex;
   flex-direction: column;
-  max-height: 90vh;
+  /* max-height: 92vh; */
 }
 
 .chat-input-block {
-  height: 10vh;
+  /* min-height: 8vh; */
   display: flex;
   flex-direction: row;
   width: calc(100% - 40px);
   justify-content: space-between;
   align-items: center;
-  padding: 0px 20px;
+  padding: 20px 20px 20px 20px;
 }
 
 .chat-input {
