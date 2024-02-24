@@ -14,6 +14,11 @@ Feel free to share your feedback or report any issues on our [GitHub repository]
 - **Platform Support**: FireCoder supports Windows, Linux, and macOS.
 - **Multi-line Code Suggestions**: Enhance your coding experience with multi-line code suggestions.
 
+### New Experimental Features:
+
+- **GPU Support**: You can now utilize GPU support by adjusting the `firecoder.experimental.useGpu` settings in configuration.
+- **Chat Mode**: Explore the new chat mode functionality by adjusting the `firecoder.experimental.chat` settings in configuration.
+
 ## Getting Started
 
 1. Download the [VS Code extension](https://marketplace.visualstudio.com/items?itemName=FireCoder.firecoder) for FireCoder.
