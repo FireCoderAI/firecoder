@@ -59,7 +59,6 @@ class Server {
     const osplatform = os.platform();
     const osmachine = os.machine();
     const isMacArm64 = osplatform === "darwin" && osmachine === "arm64";
-    const isBaseModel = Object.keys(modelsBase).includes(this.typeModel);
 
     const serverIsStarted = await this.checkServerStatus();
     if (serverIsStarted) {
@@ -112,6 +111,7 @@ class Server {
     const port = models[this.typeModel].port;
 
     const isChatModel = this.typeModel in modelsChat;
+    const isBaseModel = this.typeModel in modelsBase;
 
     this.serverProcess = spawn(
       serverPath,
@@ -189,7 +189,7 @@ class Server {
     });
 
     const isServerStarted = await this.checkServerStatusIntervalWithTimeout(
-      5000
+      10000
     );
 
     if (!isServerStarted) {
@@ -224,8 +224,9 @@ class Server {
 
   public async checkServerStatus() {
     try {
-      // const isMacArm64 = osplatform === "darwin" && osmachine === "arm64";
-      const isMacArm64 = true;
+      const osplatform = os.platform();
+      const osmachine = os.machine();
+      const isMacArm64 = osplatform === "darwin" && osmachine === "arm64";
       const res = await fetch(
         `${this.serverUrl}/${isMacArm64 ? "model.json" : "health"}`,
         {

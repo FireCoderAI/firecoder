@@ -71,48 +71,14 @@ export async function* sendChatRequest(
       }
     }
 
-    // if (!response.ok) {
-    //   Logger.error(response.statusText);
-
-    //   vscode.window.showErrorMessage(
-    //     `Error: ${response.status} ${response.statusText}`
-    //   );
-    //   return null;
-    // }
-
-    // const completion: {
-    //   content: string;
-    //   slot_id: number;
-    //   timings: {
-    //     predicted_ms: number;
-    //     predicted_n: number;
-    //     predicted_per_second: number;
-    //     predicted_per_token_ms: number;
-    //     prompt_ms: number;
-    //     prompt_n: number;
-    //     prompt_per_second: number;
-    //     prompt_per_token_ms: number;
-    //   };
-    // } = (await response.json()) as any;
-
-    // if (completion.content === "") {
-    //   return null;
-    // }
-
     loggerCompletion.info(
-      // `Slot Id: ${completion.slot_id}; ` +
       `Total time: ${(performance.now() - startTime).toFixed(2)}; ` +
         `PP: ${timings?.prompt_per_second?.toFixed(2)}; [t/s] ` +
         `TG: ${timings?.predicted_per_second?.toFixed(2)}; [t/s]`
     );
 
-    // const timing = completion?.timings?.prompt_ms
-    //   ? completion?.timings?.prompt_ms
-    //   : performance.now() - startTime;
-
     loggerCompletion.info("Request: finished");
     return;
-    // return { content: completion.content } as const;
   } catch (error) {
     const Error = error as Error;
     if (Error.name === "AbortError") {
