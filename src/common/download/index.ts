@@ -264,7 +264,7 @@ export const downloadModel = async (typeModel: TypeModel) => {
     throw new Error("Server file info not found");
   }
 
-  Logger.info("Got model file info", {
+  Logger.info(`Got model ${typeModel} file info`, {
     component: "download>model",
     sendTelemetry: true,
   });
@@ -275,13 +275,16 @@ export const downloadModel = async (typeModel: TypeModel) => {
     const checksum = await getChecksum(modelPath);
 
     if (checksum === modelFileInfo.checksum) {
-      Logger.info("Checksum model is correct, just return model path", {
-        component: "download>model",
-        sendTelemetry: true,
-      });
+      Logger.info(
+        `Checksum model ${typeModel} is correct, just return model path`,
+        {
+          component: "download>model",
+          sendTelemetry: true,
+        }
+      );
       return modelPath;
     }
-    Logger.info("Checksum model mismatch", {
+    Logger.info(`Checksum model ${typeModel} mismatch`, {
       component: "download>model",
       sendTelemetry: true,
     });
@@ -291,7 +294,7 @@ export const downloadModel = async (typeModel: TypeModel) => {
     await fsPromise.unlink(modelPath);
   }
 
-  Logger.info("Started download model", {
+  Logger.info(`Started download model ${typeModel}`, {
     component: "download>model",
     sendTelemetry: true,
   });
@@ -304,7 +307,7 @@ export const downloadModel = async (typeModel: TypeModel) => {
       `Downloading model ${typeModel}: ${downloaded} / ${total}`
   );
 
-  Logger.info("Finish download model", {
+  Logger.info(`Finish download model ${typeModel}`, {
     component: "download>model",
     sendTelemetry: true,
   });

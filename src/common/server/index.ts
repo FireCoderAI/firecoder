@@ -82,17 +82,20 @@ class Server {
         sendTelemetry: true,
       });
       FirecoderTelemetrySenderInstance.sendErrorData(error as Error, {
-        step: "Error while downloading server or model",
+        step: `Error while downloading server or model ${this.typeModel}`,
       });
       stopTask();
       throw error;
     }
 
     if (!serverPath || !modelPath) {
-      Logger.error("Server is not started. Don't have server or model path.", {
-        component: "server",
-        sendTelemetry: true,
-      });
+      Logger.error(
+        `Server ${this.typeModel} is not started. Don't have server or model path.`,
+        {
+          component: "server",
+          sendTelemetry: true,
+        }
+      );
 
       stopTask();
       return false;

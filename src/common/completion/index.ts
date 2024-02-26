@@ -87,9 +87,7 @@ export const getInlineCompletionProvider = (
           parameters,
           abortController,
           loggerCompletion.uuid(),
-          triggerAuto
-            ? servers["base-small"].serverUrl
-            : servers["base-small"].serverUrl
+          servers[modelType].serverUrl
         );
 
         if (completion === null) {
