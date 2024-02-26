@@ -19,12 +19,25 @@ export async function activate(context: vscode.ExtensionContext) {
     sendTelemetry: true,
   });
 
-  const provider = new ChatPanel(context.extensionUri);
-  context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider("firecoder.chat-gui", provider, {
-      webviewOptions: { retainContextWhenHidden: true },
-    })
-  );
+  const isChatEnabled = configuration.get("experimental.chat");
+
+  if (isChatEnabled) {
+    const provider = new ChatPanel(context.extensionUri);
+    context.subscriptions.push(
+      vscode.window.registerWebviewViewProvider(
+        "firecoder.chat-gui",
+        provider,
+        {
+          webviewOptions: { retainContextWhenHidden: true },
+        }
+      )
+    );
+    context.subscriptions.push(
+      vscode.commands.registerCommand("firecoder.startNewChat", async () => {
+        await provider.sendMessageToWebview("startNewChat", {});
+      })
+    );
+  }
 
   statusBar.init(context);
 
@@ -45,12 +58,6 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("firecoder.startNewChat", async () => {
-      await provider.sendMessageToWebview("startNewChat", {});
-    })
-  );
-
-  context.subscriptions.push(
     vscode.commands.registerCommand("firecoder.inlineSuggest", async () => {
       await vscode.commands.executeCommand(
         "editor.action.inlineSuggest.trigger"
@@ -65,9 +72,7 @@ export async function activate(context: vscode.ExtensionContext) {
           ...new Set([
             configuration.get("completion.autoMode"),
             configuration.get("completion.manuallyMode"),
-            ...(configuration.get("experimental.chat")
-              ? ["chat-medium" as const]
-              : []),
+            ...(isChatEnabled ? ["chat-medium" as const] : []),
           ]),
         ].map((serverType) => servers[serverType].startServer())
       );

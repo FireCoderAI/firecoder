@@ -46,7 +46,8 @@
           "type": "webview",
           "id": "firecoder.chat-gui",
           "name": "",
-          "visibility": "visible"
+          "visibility": "visible",
+          "when": "config.firecoder.experimental.chat"
         }
       ]
     },
