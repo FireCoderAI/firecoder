@@ -203,7 +203,7 @@ export const downloadServer = async () => {
     throw new Error("Server file info not found");
   }
 
-  Logger.info("Got server file info", {
+  Logger.info(`Got server file info ${serverFileInfo.url}`, {
     component: "download>server",
     sendTelemetry: true,
   });
