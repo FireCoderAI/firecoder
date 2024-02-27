@@ -75,12 +75,13 @@
       {
         "key": "alt+\\",
         "command": "firecoder.inlineSuggest",
-        "mac": "ctrl+enter"
+        "when": "editorTextFocus"
       },
       {
         "key": "ctrl+enter",
         "command": "firecoder.inlineSuggest",
-        "mac": "ctrl+enter"
+        "mac": "ctrl+enter",
+        "when": "editorTextFocus"
       }
     ],
     "configuration": {
