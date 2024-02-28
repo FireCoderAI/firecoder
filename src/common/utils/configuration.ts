@@ -14,11 +14,20 @@ const ConfigurationProperties = {
   "experimental.chat": {
     default: false,
   },
+  "experimental.chat.useGpu": {
+    default: false,
+  },
   "completion.autoMode": {
     default: "base-small",
   },
-  "completion.manuallyMode": {
+  "completion.autoMode.useGpu": {
+    default: false,
+  },
+  "completion.manualMode": {
     default: "base-small",
+  },
+  "completion.manualMode.useGpu": {
+    default: false,
   },
 } as const;
 
@@ -36,11 +45,20 @@ interface ConfigurationPropertiesType
   "experimental.chat": {
     possibleValues: boolean;
   };
+  "experimental.chat.useGpu": {
+    possibleValues: boolean;
+  };
   "completion.autoMode": {
     possibleValues: TypeModelsBase;
   };
-  "completion.manuallyMode": {
+  "completion.autoMode.useGpu": {
+    possibleValues: boolean;
+  };
+  "completion.manualMode": {
     possibleValues: TypeModelsBase;
+  };
+  "completion.manualMode.useGpu": {
+    possibleValues: boolean;
   };
 }
 

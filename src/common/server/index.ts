@@ -105,16 +105,30 @@ class Server {
       component: "server",
       sendTelemetry: true,
     });
+    const isChatModel = this.typeModel in modelsChat;
+    const isBaseModel = this.typeModel in modelsBase;
 
-    const useGPU =
+    const gpuEnabled =
       configuration.get("experimental.useGpu.linux.nvidia") ||
       configuration.get("experimental.useGpu.osx.metal") ||
       configuration.get("experimental.useGpu.windows.nvidia");
 
-    const port = models[this.typeModel].port;
+    const useGPUChat =
+      configuration.get("experimental.chat.useGpu") && isChatModel;
 
-    const isChatModel = this.typeModel in modelsChat;
-    const isBaseModel = this.typeModel in modelsBase;
+    const useGPUCompletionAuto =
+      configuration.get("completion.autoMode.useGpu") &&
+      this.typeModel === configuration.get("completion.autoMode");
+
+    const useGPUCompletionManual =
+      configuration.get("completion.manualMode.useGpu") &&
+      this.typeModel === configuration.get("completion.manualMode");
+
+    const useGpu =
+      gpuEnabled &&
+      (useGPUCompletionAuto || useGPUCompletionManual || useGPUChat);
+
+    const port = models[this.typeModel].port;
 
     this.serverProcess = spawn(
       serverPath,
@@ -126,7 +140,7 @@ class Server {
         ...(isChatModel ? ["--ctx-size", "16384"] : ["--ctx-size", "4096"]),
         ...(isBaseModel ? ["--parallel", "4"] : []),
         ...(isMacArm64 ? ["--nobrowser"] : []),
-        ...(useGPU ? ["--n-gpu-layers", "100"] : []),
+        ...(useGpu ? ["--n-gpu-layers", "100"] : []),
         "--cont-batching",
         "--embedding",
         "--log-disable",

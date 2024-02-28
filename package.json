@@ -107,6 +107,11 @@
           "default": false,
           "description": "Enable experimental chat feature."
         },
+        "firecoder.experimental.chat.useGpu": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable experimental chat feature."
+        },
         "firecoder.completion.autoMode": {
           "type": "string",
           "default": "base-small",
@@ -117,25 +122,35 @@
             "base-large"
           ],
           "enumDescriptions": [
-            "Use if you have only CPU.",
-            "Use if you have standard GPU.",
-            "Use if you have enterprise GPU."
+            "Use if you have only CPU. (RAM OR VRAM required 4 GB)",
+            "Use if you have standard GPU. (RAM OR VRAM required 10 GB)",
+            "Use if you have enterprise GPU. (RAM OR VRAM required 38 GB)"
           ]
         },
-        "firecoder.completion.manuallyMode": {
+        "firecoder.completion.autoMode.useGpu": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable experimental chat feature."
+        },
+        "firecoder.completion.manualMode": {
           "type": "string",
           "default": "base-small",
-          "markdownDescription": "Select a model for the manually mode based on your system specifications.",
+          "markdownDescription": "Select a model for the manual mode based on your system specifications.",
           "enum": [
             "base-small",
             "base-medium",
             "base-large"
           ],
           "enumDescriptions": [
-            "Use if you have only CPU.",
-            "Use if you have standard GPU.",
-            "Use if you have enterprise GPU."
+            "Use if you have only CPU. (RAM OR VRAM required 4 GB)",
+            "Use if you have standard GPU. (RAM OR VRAM required 10 GB)",
+            "Use if you have enterprise GPU. (RAM OR VRAM required 38 GB)"
           ]
+        },
+        "firecoder.completion.manualMode.useGpu": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable experimental chat feature."
         }
       }
     }

@@ -71,7 +71,7 @@ export async function activate(context: vscode.ExtensionContext) {
         [
           ...new Set([
             configuration.get("completion.autoMode"),
-            configuration.get("completion.manuallyMode"),
+            configuration.get("completion.manualMode"),
             ...(isChatEnabled ? ["chat-medium" as const] : []),
           ]),
         ].map((serverType) => servers[serverType].startServer())
