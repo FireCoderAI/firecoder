@@ -54,7 +54,7 @@ export const getInlineCompletionProvider = (
 
       const modelType = triggerAuto
         ? configuration.get("completion.autoMode")
-        : configuration.get("completion.manuallyMode");
+        : configuration.get("completion.manualMode");
       const prompt = await getPromptCompletion(
         document,
         position,
