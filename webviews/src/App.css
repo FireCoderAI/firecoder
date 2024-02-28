@@ -15,11 +15,9 @@ body {
   overflow: auto;
   display: flex;
   flex-direction: column;
-  /* max-height: 92vh; */
 }
 
 .chat-input-block {
-  /* min-height: 8vh; */
   display: flex;
   flex-direction: row;
   width: calc(100% - 40px);

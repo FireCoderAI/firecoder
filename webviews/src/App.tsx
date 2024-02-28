@@ -1,19 +1,12 @@
 import { vscode } from "./utilities/vscode";
-import {
-  VSCodeButton,
-  VSCodeProgressRing,
-  VSCodeTextArea,
-  VSCodeTextField,
-} from "@vscode/webview-ui-toolkit/react";
+import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import "./App.css";
-// import "./codicon.css";
 import { ChatMessage } from "./components/ChatMessage";
 import { useState } from "react";
 import { ChatHelloMessage } from "./components/ChatHelloMessage";
 import { useMessageListener } from "./hooks/messageListener";
 import { randomMessageId } from "./utilities/messageId";
 import TextArea from "./components/TextArea";
-// import ProgressDivider from "./components/VsCodeDividerProgress";
 
 export const App = () => {
   const [input, setInput] = useState("");
@@ -65,6 +58,10 @@ export const App = () => {
     if (isLoading) {
       return;
     }
+    if (input === "") {
+      return;
+    }
+
     setChatHistory((value) => {
       const messageId = randomMessageId();
 

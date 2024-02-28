@@ -2,13 +2,13 @@ import { VSCodeDivider } from "@vscode/webview-ui-toolkit/react";
 import Markdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus as vscodeHighlightStyle } from "react-syntax-highlighter/dist/esm/styles/prism";
-import "./Component.css";
+import styles from "./styles.module.css";
 
 export const ChatMessage = (props: { role: string; content: string }) => {
   const title = props.role === "ai" ? "FireCoder" : "You";
   return (
     <>
-      <div className="chat-message">
+      <div className={styles["chat-message"]}>
         <h4>{title}</h4>
         <Markdown
           components={{
