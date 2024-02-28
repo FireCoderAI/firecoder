@@ -65,6 +65,16 @@ export async function activate(context: vscode.ExtensionContext) {
     })
   );
 
+  context.subscriptions.push(
+    vscode.commands.registerCommand("firecoder.welcome", async () => {
+      await vscode.commands.executeCommand(
+        `workbench.action.openWalkthrough`,
+        `FireCoder.firecoder#firecoderwelcome`,
+        false
+      );
+    })
+  );
+
   (async () => {
     try {
       const serversStarted = await Promise.all(

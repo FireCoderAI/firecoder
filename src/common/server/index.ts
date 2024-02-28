@@ -126,7 +126,7 @@ class Server {
         ...(isChatModel ? ["--ctx-size", "16384"] : ["--ctx-size", "4096"]),
         ...(isBaseModel ? ["--parallel", "4"] : []),
         ...(isMacArm64 ? ["--nobrowser"] : []),
-        ...(useGPU ? ["--n-gpu-layers", "100"] : []),
+        ...(useGPU && isChatModel ? ["--n-gpu-layers", "100"] : []),
         "--cont-batching",
         "--embedding",
         "--log-disable",
