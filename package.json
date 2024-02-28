@@ -40,12 +40,45 @@
         }
       ]
     },
+    "walkthroughs": [
+      {
+        "id": "firecoderwelcome",
+        "title": "Get started with FireCoder",
+        "description": "Discover and personalize features that will help write better code.",
+        "steps": [
+          {
+            "id": "download",
+            "title": "download",
+            "description": "Upon installation, please wait for the **server** and **model** download, which is essential for FireCoder to function with its AI-driven features. \nDownload duration may vary depending on your internet speed.",
+            "media": {
+              "markdown": "./walkthroughs/download.md"
+            }
+          },
+          {
+            "id": "autoMode",
+            "title": "Auto Mode",
+            "description": "Start by using the auto mode, which provides prompts automatically. \nBy default, FireCoder uses the **base-small** model. This model strikes a balance between speed and prompt quality, offering quick and reliable suggestions right out of the box.",
+            "media": {
+              "markdown": "./walkthroughs/auto-mode.md"
+            }
+          },
+          {
+            "id": "manualMode",
+            "title": "Manual Mode",
+            "description": "Manual mode can be activated using the hotkey **Ctrl+Enter**. \nWhen using manual mode, FireCoder will attempt to gather as much context as possible to provide the best suggestions. Manual mode can offer hits in multiple lines and has no time restrictions.",
+            "media": {
+              "markdown": "./walkthroughs/manual-mode.md"
+            }
+          }
+        ]
+      }
+    ],
     "views": {
       "firecoder": [
         {
           "type": "webview",
           "id": "firecoder.chat-gui",
-          "name": "",
+          "name": "FireCoder",
           "visibility": "visible",
           "when": "config.firecoder.experimental.chat"
         }
@@ -63,11 +96,15 @@
     "commands": [
       {
         "command": "firecoder.inlineSuggest",
-        "title": "My Inline Completion Demo Settings"
+        "title": "FireCoder: Trigger inline suggestion"
+      },
+      {
+        "command": "firecoder.welcome",
+        "title": "FireCoder: Welcome"
       },
       {
         "command": "firecoder.startNewChat",
-        "title": "New Chat",
+        "title": "FireCoder: New Chat",
         "icon": "$(add)"
       }
     ],
