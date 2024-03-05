@@ -123,7 +123,8 @@ class Server {
         modelPath,
         "--port",
         String(port),
-        ...(isChatModel ? ["--ctx-size", "16384"] : ["--ctx-size", "4096"]),
+        // TODO: adjust content size based on user resources
+        ...(isChatModel ? ["--ctx-size", "16384"] : ["--ctx-size", "16384"]),
         ...(isBaseModel ? ["--parallel", "4"] : []),
         ...(isMacArm64 ? ["--nobrowser"] : []),
         ...(useGPU ? ["--n-gpu-layers", "100"] : []),

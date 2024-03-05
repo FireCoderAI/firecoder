@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import Logger from "../logger";
+import path from "node:path";
 
 const tokenize = async (text: string, url: string) => {
   try {
@@ -26,61 +26,171 @@ const tokenize = async (text: string, url: string) => {
   }
 };
 
-export const getPromptCompletion = async (
-  document: vscode.TextDocument,
-  position: vscode.Position,
-  maxTokenExpect = 200,
-  url: string
-) => {
-  const maxTokenHardLimit = 1000;
-  const maxToken =
-    maxTokenExpect > maxTokenHardLimit ? maxTokenHardLimit : maxTokenExpect;
+const getTextNormalized = (text: string) => {
+  return text
+    .replace("<｜fim▁begin｜>", "")
+    .replace("<｜fim▁hole｜>", "")
+    .replace("<｜fim▁end｜>", "");
+};
 
-  const textBefore = document.getText(
-    new vscode.Range(new vscode.Position(0, 0), position)
+const spliteDocumentByPosition = (
+  document: vscode.TextDocument,
+  position: vscode.Position
+): [string, string] => {
+  const textBefore = getTextNormalized(
+    document.getText(new vscode.Range(new vscode.Position(0, 0), position))
   );
-  const textAfter = document.getText(
-    new vscode.Range(
-      position,
-      new vscode.Position(
-        document.lineCount,
-        document.lineAt(document.lineCount - 1).text.length
+  const textAfter = getTextNormalized(
+    document.getText(
+      new vscode.Range(
+        position,
+        new vscode.Position(
+          document.lineCount,
+          document.lineAt(document.lineCount - 1).text.length
+        )
       )
     )
   );
+  return [textBefore, textAfter];
+};
 
-  let before = 50;
-  let after = 50;
+const processingDocumentWithPosition = async ({
+  document,
+  position,
+  url,
+  maxToken,
+}: {
+  document: vscode.TextDocument;
+  position: vscode.Position;
+  url: string;
+  maxToken: number;
+}) => {
+  const [textBefore, textAfter] = spliteDocumentByPosition(document, position);
+  let beforeTokens = 50;
+  let afterTokens = 50;
+
   let textBeforeSlice: string;
   let textAfterSlice: string;
-  Logger.startPerfMarker("Prepare prompt");
+
+  let resToken = 0;
+
   while (true) {
-    textBeforeSlice = textBefore.slice(before * -1);
-    textAfterSlice = textAfter.slice(0, after);
-    Logger.startPerfMarker("Prepare prompt request");
+    textBeforeSlice = textBefore.slice(beforeTokens * -1);
+    textAfterSlice = textAfter.slice(0, afterTokens);
 
-    const [tokensBeforeSlice, tokensAfterSlice] = await Promise.all([
-      tokenize(textBeforeSlice, url),
-      tokenize(textAfterSlice, url),
-    ]);
-    Logger.endPerfMarker("Prepare prompt request");
+    resToken = await tokenize(textBeforeSlice + textAfterSlice, url);
 
-    const resToken = tokensAfterSlice + tokensBeforeSlice;
     if (
       resToken >= maxToken ||
       (textBeforeSlice.length >= textBefore.length &&
         textAfterSlice.length >= textAfter.length)
     ) {
-      Logger.info(`Tokens count: ${resToken}`);
-      break;
+      return {
+        documentText: `${textBeforeSlice}<｜fim▁hole｜>${textAfterSlice}`,
+        documentTokens: resToken,
+      };
     }
 
-    before = Number((before * (maxToken / resToken)).toFixed(0)) + 5;
-    after = Number((after * (maxToken / resToken)).toFixed(0)) + 5;
+    beforeTokens =
+      Number((beforeTokens * (maxToken / resToken)).toFixed(0)) + 5;
+    afterTokens = Number((afterTokens * (maxToken / resToken)).toFixed(0)) + 5;
   }
-  Logger.endPerfMarker("Prepare prompt");
+};
 
-  const prompt = `<｜fim▁begin｜>${textBeforeSlice}<｜fim▁hole｜>${textAfterSlice}<｜fim▁end｜>`;
+const processingDocument = async ({
+  document,
+  url,
+  maxToken,
+}: {
+  document: vscode.TextDocument;
+  url: string;
+  maxToken: number;
+}) => {
+  const text = getTextNormalized(document.getText());
+  let tokens = 50;
+
+  let textSlice: string;
+
+  let resToken = 0;
+
+  while (true) {
+    textSlice = text.slice(0, tokens);
+
+    resToken = await tokenize(textSlice, url);
+
+    if (resToken >= maxToken || textSlice.length >= text.length) {
+      return {
+        documentText: textSlice,
+        documentTokens: resToken,
+      };
+    }
+
+    tokens = Number((tokens * (maxToken / resToken)).toFixed(0)) + 5;
+  }
+};
+
+const getRelativePath = (uri: vscode.Uri) => {
+  const workspacePath = vscode.workspace.getWorkspaceFolder(uri)?.uri.fsPath;
+  const relativePath = path.relative(workspacePath ?? "", uri.fsPath);
+  return relativePath;
+};
+
+export const getPromptCompletion = async ({
+  activeDocument,
+  additionalDocuments,
+  position,
+  maxTokenExpect = 200,
+  url,
+}: {
+  activeDocument: vscode.TextDocument;
+  additionalDocuments: vscode.TextDocument[];
+  position: vscode.Position;
+  maxTokenExpect: number;
+  url: string;
+}) => {
+  const maxTokenHardLimit = 4000;
+  const maxToken =
+    maxTokenExpect > maxTokenHardLimit ? maxTokenHardLimit : maxTokenExpect;
+
+  const {
+    documentTokens: activeDocumentTokens,
+    documentText: activeDocumentText,
+  } = await processingDocumentWithPosition({
+    document: activeDocument,
+    position,
+    maxToken,
+    url,
+  });
+
+  let additionalDocumentsText = "";
+
+  if (
+    additionalDocuments.length !== 0 &&
+    maxToken - activeDocumentTokens > 100
+  ) {
+    let restTokens = maxToken - activeDocumentTokens;
+    for (const document of additionalDocuments) {
+      const { documentText, documentTokens } = await processingDocument({
+        document,
+        maxToken: restTokens,
+        url,
+      });
+
+      additionalDocumentsText +=
+        "\n" + getRelativePath(document.uri) + "\n" + documentText;
+      restTokens -= documentTokens;
+      if (restTokens <= 0) {
+        break;
+      }
+    }
+  }
+
+  const activeDocumentFileName =
+    additionalDocumentsText === ""
+      ? ""
+      : "\n" + getRelativePath(activeDocument.uri) + "\n";
+
+  const prompt = `<｜fim▁begin｜>${additionalDocumentsText}${activeDocumentFileName}${activeDocumentText}<｜fim▁end｜>`;
 
   return prompt;
 };

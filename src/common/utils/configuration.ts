@@ -14,6 +14,9 @@ const ConfigurationProperties = {
   "experimental.chat": {
     default: false,
   },
+  "experimental.useopentabs": {
+    default: true,
+  },
   "completion.autoMode": {
     default: "base-small",
   },
@@ -34,6 +37,9 @@ interface ConfigurationPropertiesType
     possibleValues: boolean;
   };
   "experimental.chat": {
+    possibleValues: boolean;
+  };
+  "experimental.useopentabs": {
     possibleValues: boolean;
   };
   "completion.autoMode": {

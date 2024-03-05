@@ -136,6 +136,11 @@
             "Use if you have standard GPU.",
             "Use if you have enterprise GPU."
           ]
+        },
+        "firecoder.experimental.useopentabs": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Enable experimental possibility to use opened tabs as context for manual completion mode."
         }
       }
     }
