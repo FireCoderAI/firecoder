@@ -6,6 +6,7 @@ import Logger from "../logger";
 import { sendCompletionRequest } from "./localCompletion";
 import { servers } from "../server";
 import { configuration } from "../utils/configuration";
+import { state } from "../utils/state";
 
 const logCompletion = () => {
   const uuid = randomUUID();
@@ -31,9 +32,8 @@ export const getInlineCompletionProvider = (
     ) => {
       const triggerAuto =
         context.triggerKind === vscode.InlineCompletionTriggerKind.Automatic;
-      const currentInlineSuggestModeAuto = extensionContext.workspaceState.get(
-        "inlineSuggestModeAuto",
-        true
+      const currentInlineSuggestModeAuto = state.workspace.get(
+        "inlineSuggestModeAuto"
       );
       if (currentInlineSuggestModeAuto !== true && triggerAuto === true) {
         return [];
@@ -55,12 +55,35 @@ export const getInlineCompletionProvider = (
       const modelType = triggerAuto
         ? configuration.get("completion.autoMode")
         : configuration.get("completion.manuallyMode");
-      const prompt = await getPromptCompletion(
-        document,
-        position,
-        triggerAuto ? maxToken : 1000,
-        servers[modelType].serverUrl
-      );
+
+      let additionalDocuments: vscode.TextDocument[] = [];
+
+      if (!triggerAuto && configuration.get("experimental.useopentabs")) {
+        const additionalDocumentsUri = vscode.window.tabGroups.all
+          .map((group) => group.tabs)
+          .flat()
+          .filter((tab) => !(tab.group.isActive && tab.isActive))
+          .filter(
+            (tab) =>
+              tab.input &&
+              "uri" in (tab.input as any) &&
+              ((tab.input as any).uri as vscode.Uri).scheme === "file"
+          )
+          .map((tab) => (tab.input as any).uri as vscode.Uri);
+        additionalDocuments = await Promise.all(
+          additionalDocumentsUri.map((uri) =>
+            vscode.workspace.openTextDocument(uri)
+          )
+        );
+      }
+
+      const prompt = await getPromptCompletion({
+        activeDocument: document,
+        additionalDocuments: additionalDocuments,
+        position: position,
+        maxTokenExpect: triggerAuto ? maxToken : 1000,
+        url: servers[modelType].serverUrl,
+      });
 
       const parameters = triggerAuto
         ? {
