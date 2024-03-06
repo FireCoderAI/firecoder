@@ -5,6 +5,7 @@ import fsPromise from "node:fs/promises";
 import fs from "node:fs";
 import child_process from "node:child_process";
 import { promisify } from "node:util";
+import { configuration } from "../utils/configuration";
 const exec = promisify(child_process.exec);
 
 export const checkFileOrFolderExists = async (pathToCheck: string) => {
@@ -17,6 +18,12 @@ export const checkFileOrFolderExists = async (pathToCheck: string) => {
 };
 
 export const getSaveFolder = async () => {
+  const homedirFromConfiguration = configuration.get("homedir");
+
+  if (homedirFromConfiguration !== "") {
+    return homedirFromConfiguration;
+  }
+
   const pathSaveFolder = path.join(os.homedir(), ".firecoder");
 
   const folderIsExist = await checkFileOrFolderExists(pathSaveFolder);

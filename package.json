@@ -141,6 +141,11 @@
           "type": "boolean",
           "default": true,
           "markdownDescription": "Enable experimental possibility to use opened tabs as context for manual completion mode."
+        },
+        "firecoder.homedir": {
+          "type": "string",
+          "default": "",
+          "description": "The directory to use for storing user data associated with this extension. Set to an empty string, `os.homedir()` will be used."
         }
       }
     }
