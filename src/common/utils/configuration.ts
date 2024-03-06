@@ -23,6 +23,9 @@ const ConfigurationProperties = {
   "completion.manuallyMode": {
     default: "base-small",
   },
+  homedir: {
+    default: "",
+  },
 } as const;
 
 interface ConfigurationPropertiesType
@@ -47,6 +50,9 @@ interface ConfigurationPropertiesType
   };
   "completion.manuallyMode": {
     possibleValues: TypeModelsBase;
+  };
+  homedir: {
+    possibleValues: string;
   };
 }
 
