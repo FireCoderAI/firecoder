@@ -66,34 +66,46 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   (async () => {
-    try {
-      const serversStarted = await Promise.all(
-        [
-          ...new Set([
-            configuration.get("completion.autoMode"),
-            configuration.get("completion.manuallyMode"),
-            ...(isChatEnabled ? ["chat-medium" as const] : []),
-          ]),
-        ].map((serverType) => servers[serverType].startServer())
-      );
-
-      if (serversStarted.some((serverStarted) => serverStarted)) {
-        Logger.info("Server inited", {
-          component: "main",
-          sendTelemetry: true,
-        });
-        const InlineCompletionProvider = getInlineCompletionProvider(context);
-        vscode.languages.registerInlineCompletionItemProvider(
-          { pattern: "**" },
-          InlineCompletionProvider
-        );
-      }
-    } catch (error) {
-      vscode.window.showErrorMessage((error as Error).message);
-      Logger.error(error, {
-        component: "server",
+    if (configuration.get("cloud.use")) {
+      Logger.info("Use cloud", {
+        component: "main",
         sendTelemetry: true,
       });
+      const InlineCompletionProvider = getInlineCompletionProvider(context);
+      vscode.languages.registerInlineCompletionItemProvider(
+        { pattern: "**" },
+        InlineCompletionProvider
+      );
+    } else {
+      try {
+        const serversStarted = await Promise.all(
+          [
+            ...new Set([
+              configuration.get("completion.autoMode"),
+              configuration.get("completion.manuallyMode"),
+              ...(isChatEnabled ? ["chat-medium" as const] : []),
+            ]),
+          ].map((serverType) => servers[serverType].startServer())
+        );
+
+        if (serversStarted.some((serverStarted) => serverStarted)) {
+          Logger.info("Server inited", {
+            component: "main",
+            sendTelemetry: true,
+          });
+          const InlineCompletionProvider = getInlineCompletionProvider(context);
+          vscode.languages.registerInlineCompletionItemProvider(
+            { pattern: "**" },
+            InlineCompletionProvider
+          );
+        }
+      } catch (error) {
+        vscode.window.showErrorMessage((error as Error).message);
+        Logger.error(error, {
+          component: "server",
+          sendTelemetry: true,
+        });
+      }
     }
 
     Logger.info("FireCoder is ready.", {

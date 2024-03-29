@@ -146,6 +146,16 @@
           "type": "string",
           "default": "",
           "description": "The directory to use for storing user data associated with this extension. Set to an empty string, `os.homedir()` will be used."
+        },
+        "firecoder.cloud.endpoint": {
+          "type": "string",
+          "default": "",
+          "description": ""
+        },
+        "firecoder.cloud.use": {
+          "type": "boolean",
+          "default": "false",
+          "description": ""
         }
       }
     }

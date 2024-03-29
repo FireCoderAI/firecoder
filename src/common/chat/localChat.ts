@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { randomUUID } from "crypto";
 import Logger from "../logger";
-import statusBar from "../statusBar";
 
 const logCompletion = (uuid = randomUUID() as string) => {
   return {
@@ -40,8 +39,6 @@ export async function* sendChatRequest(
   uuid: string,
   url: string
 ) {
-  const { stopTask } = statusBar.startTask();
-
   const loggerCompletion = logCompletion(uuid);
 
   const parametersForCompletion = {
@@ -90,8 +87,6 @@ export async function* sendChatRequest(
     const errorMessage = Error.message;
     vscode.window.showErrorMessage(errorMessage);
     return null;
-  } finally {
-    stopTask();
   }
 }
 

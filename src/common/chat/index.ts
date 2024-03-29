@@ -4,6 +4,8 @@ import { HistoryMessage, getPromptChat } from "../prompt/promptChat";
 import Logger from "../logger";
 import { sendChatRequest } from "./localChat";
 import { servers } from "../server";
+import { configuration } from "../utils/configuration";
+import statusBar from "../statusBar";
 
 const logCompletion = () => {
   const uuid = randomUUID();
@@ -23,10 +25,16 @@ export async function* chat(history: HistoryMessage[]) {
   const prompt = await getPromptChat(history);
 
   const parameters = {
-    n_predict: 8192,
+    n_predict: 4096,
     stop: [],
     temperature: 0.7,
   };
+
+  const serverUrl = configuration.get("cloud.use")
+    ? configuration.get("cloud.endpoint")
+    : servers["chat-medium"].serverUrl;
+
+  const { stopTask } = statusBar.startTask();
 
   try {
     Logger.info(`Start request;`, {
@@ -38,7 +46,7 @@ export async function* chat(history: HistoryMessage[]) {
       prompt,
       parameters,
       loggerCompletion.uuid(),
-      servers["chat-medium"].serverUrl
+      serverUrl
     );
 
     loggerCompletion.info("Request: finished");
@@ -48,5 +56,7 @@ export async function* chat(history: HistoryMessage[]) {
 
     const errorMessage = Error.message;
     vscode.window.showErrorMessage(errorMessage);
+  } finally {
+    stopTask();
   }
 }

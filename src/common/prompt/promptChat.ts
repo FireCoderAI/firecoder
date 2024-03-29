@@ -20,6 +20,6 @@ export const getPromptChat = async (history: HistoryMessage[]) => {
     })
     .join("");
   const prompt = promptBase + promptHistory + "### Response:\n";
-  console.log(prompt);
+
   return prompt;
 };

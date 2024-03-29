@@ -26,6 +26,12 @@ const ConfigurationProperties = {
   homedir: {
     default: "",
   },
+  "cloud.endpoint": {
+    default: "",
+  },
+  "cloud.use": {
+    default: false,
+  },
 } as const;
 
 interface ConfigurationPropertiesType
@@ -53,6 +59,12 @@ interface ConfigurationPropertiesType
   };
   homedir: {
     possibleValues: string;
+  };
+  "cloud.endpoint": {
+    possibleValues: string;
+  };
+  "cloud.use": {
+    possibleValues: boolean;
   };
 }
 
