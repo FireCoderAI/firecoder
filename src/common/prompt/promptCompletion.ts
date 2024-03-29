@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import path from "node:path";
+import Logger from "../logger";
 
 const tokenize = async (text: string, url: string) => {
   try {
@@ -53,6 +54,9 @@ const spliteDocumentByPosition = (
   );
   return [textBefore, textAfter];
 };
+const inverseSquareRoot = (x: number) => 1 / Math.sqrt(x);
+const randomFromInterval = (min: number, max: number) =>
+  Math.floor(Math.random() * (max - min + 1) + min);
 
 const processingDocumentWithPosition = async ({
   document,
@@ -66,34 +70,56 @@ const processingDocumentWithPosition = async ({
   maxToken: number;
 }) => {
   const [textBefore, textAfter] = spliteDocumentByPosition(document, position);
-  let beforeTokens = 50;
-  let afterTokens = 50;
+
+  let beforeTokens = maxToken / 2;
+  let afterTokens = maxToken / 2;
 
   let textBeforeSlice: string;
   let textAfterSlice: string;
 
-  let resToken = 0;
+  let tokens = 0;
 
   while (true) {
-    textBeforeSlice = textBefore.slice(beforeTokens * -1);
-    textAfterSlice = textAfter.slice(0, afterTokens);
+    textBeforeSlice = textBefore.slice(beforeTokens * 3 * -1);
+    textAfterSlice = textAfter.slice(0, afterTokens * 3);
 
-    resToken = await tokenize(textBeforeSlice + textAfterSlice, url);
+    tokens = await tokenize(textBeforeSlice + textAfterSlice, url);
+    const tokenDifference = Math.abs(maxToken - tokens);
+    const maxDifference = Math.max(maxToken * 0.1, 10);
 
+    const documentName = document.fileName;
+    Logger.debug(`${documentName} document tokens: ${tokens}`);
     if (
-      resToken >= maxToken ||
-      (textBeforeSlice.length >= textBefore.length &&
-        textAfterSlice.length >= textAfter.length)
+      (tokens <= maxToken &&
+        textBeforeSlice.length >= textBefore.length &&
+        textAfterSlice.length >= textAfter.length) ||
+      tokenDifference <= maxDifference
     ) {
       return {
         documentText: `${textBeforeSlice}<｜fim▁hole｜>${textAfterSlice}`,
-        documentTokens: resToken,
+        documentTokens: tokens,
       };
     }
 
-    beforeTokens =
-      Number((beforeTokens * (maxToken / resToken)).toFixed(0)) + 5;
-    afterTokens = Number((afterTokens * (maxToken / resToken)).toFixed(0)) + 5;
+    if (tokens <= maxToken) {
+      beforeTokens +=
+        inverseSquareRoot(beforeTokens / maxToken) *
+        randomFromInterval(30, 60) *
+        4;
+      afterTokens +=
+        inverseSquareRoot(afterTokens / maxToken) *
+        randomFromInterval(30, 60) *
+        4;
+    } else {
+      beforeTokens -=
+        inverseSquareRoot(beforeTokens / maxToken) *
+        randomFromInterval(30, 60) *
+        4;
+      afterTokens -=
+        inverseSquareRoot(afterTokens / maxToken) *
+        randomFromInterval(30, 60) *
+        4;
+    }
   }
 };
 
@@ -107,25 +133,58 @@ const processingDocument = async ({
   maxToken: number;
 }) => {
   const text = getTextNormalized(document.getText());
-  let tokens = 50;
+
+  let tokens = maxToken;
 
   let textSlice: string;
 
-  let resToken = 0;
-
   while (true) {
-    textSlice = text.slice(0, tokens);
+    Logger.debug("New iteration of the while loop");
 
-    resToken = await tokenize(textSlice, url);
+    textSlice = text.slice(0, Number(tokens.toFixed(0)) * 3);
 
-    if (resToken >= maxToken || textSlice.length >= text.length) {
+    tokens = await tokenize(textSlice, url);
+
+    const tokenDifference = Math.abs(maxToken - tokens);
+    const maxDifference = Math.max(maxToken * 0.05, 10);
+
+    const logMessage = `Text slice length: ${textSlice.length}, Tokens after tokenization: ${tokens}, Max token: ${maxToken}, Token difference: ${tokenDifference}`;
+
+    Logger.debug(logMessage);
+
+    const documentName = document.fileName;
+    Logger.debug(`${documentName} document tokens: ${tokens}`);
+    if (
+      (tokens <= maxToken && textSlice.length >= text.length) ||
+      tokenDifference <= maxDifference
+    ) {
+      Logger.debug(`${documentName} document tokens resualt: ${tokens}`);
+
       return {
         documentText: textSlice,
-        documentTokens: resToken,
+        documentTokens: tokens,
       };
     }
 
-    tokens = Number((tokens * (maxToken / resToken)).toFixed(0)) + 5;
+    if (tokens <= maxToken) {
+      const ratio = tokens / maxToken;
+      Logger.debug(`Calculating increment for ratio: ${ratio}`);
+
+      const increment = inverseSquareRoot(ratio) * randomFromInterval(10, 20);
+      Logger.debug(`Increment calculated: ${increment}`);
+
+      tokens += increment;
+      Logger.debug(`Tokens incremented by: ${increment}`);
+    } else {
+      const ratio = tokens / maxToken;
+      Logger.debug(`Calculating decrement for ratio: ${ratio}`);
+
+      const decrement = inverseSquareRoot(ratio) * randomFromInterval(250, 500);
+      Logger.debug(`Decrement calculated: ${decrement}`);
+
+      tokens -= decrement;
+      Logger.debug(`Tokens decremented by: ${decrement}`);
+    }
   }
 };
 
@@ -148,7 +207,7 @@ export const getPromptCompletion = async ({
   maxTokenExpect: number;
   url: string;
 }) => {
-  const maxTokenHardLimit = 4000;
+  const maxTokenHardLimit = 10000;
   const maxToken =
     maxTokenExpect > maxTokenHardLimit ? maxTokenHardLimit : maxTokenExpect;
 
@@ -170,18 +229,23 @@ export const getPromptCompletion = async ({
   ) {
     let restTokens = maxToken - activeDocumentTokens;
     for (const document of additionalDocuments) {
+      if (restTokens <= 50) {
+        break;
+      }
       const { documentText, documentTokens } = await processingDocument({
         document,
         maxToken: restTokens,
         url,
       });
+      const documentName = document.fileName;
+
+      Logger.debug(
+        `${documentName} document tokens resualt: ${documentTokens}`
+      );
 
       additionalDocumentsText +=
         "\n" + getRelativePath(document.uri) + "\n" + documentText;
       restTokens -= documentTokens;
-      if (restTokens <= 0) {
-        break;
-      }
     }
   }
 
