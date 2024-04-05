@@ -29,6 +29,9 @@ const ConfigurationProperties = {
   "cloud.endpoint": {
     default: "",
   },
+  "cloud.apiToken": {
+    default: "apikey",
+  },
   "cloud.use": {
     default: false,
   },
@@ -61,6 +64,9 @@ interface ConfigurationPropertiesType
     possibleValues: string;
   };
   "cloud.endpoint": {
+    possibleValues: string;
+  };
+  "cloud.apiToken": {
     possibleValues: string;
   };
   "cloud.use": {

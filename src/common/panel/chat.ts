@@ -108,7 +108,9 @@ export class ChatPanel implements vscode.WebviewViewProvider {
 
         switch (type) {
           case "sendMessage":
-            for await (const message of chat(data)) {
+            for await (const message of chat(data, {
+              provideHighlightedText: true,
+            })) {
               sendResponse(message, false);
             }
             sendResponse("", true);

@@ -1,2 +1,2 @@
 export { getPromptCompletion } from "./promptCompletion";
-export { getPromptChat, HistoryMessage } from "./promptChat";
+export { getPromptChat, ChatMessage as HistoryMessage } from "./promptChat";

@@ -152,6 +152,11 @@
           "default": "",
           "description": ""
         },
+        "firecoder.cloud.apiToken": {
+          "type": "string",
+          "default": "apikey",
+          "description": ""
+        },
         "firecoder.cloud.use": {
           "type": "boolean",
           "default": "false",
@@ -191,6 +196,10 @@
   },
   "dependencies": {
     "@grafana/faro-core": "^1.3.5",
-    "@grafana/faro-web-sdk": "^1.3.5"
+    "@grafana/faro-web-sdk": "^1.3.5",
+    "@langchain/community": "^0.0.27",
+    "@qdrant/js-client-rest": "^1.8.1",
+    "@xenova/transformers": "^2.15.0",
+    "langchain": "^0.1.17"
   }
 }

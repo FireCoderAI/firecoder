@@ -19,7 +19,7 @@ body {
 
 .chat-input-block {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   width: calc(100% - 40px);
   justify-content: space-between;
   align-items: center;
@@ -29,4 +29,35 @@ body {
 .chat-input {
   flex-grow: 2;
   padding-right: 20px;
+}
+
+.progress-container {
+  height: 1px;
+  width: calc(100% - 20px);
+}
+
+.progress-container .progress-bit {
+  height: 1px;
+  top: 1px;
+  position: relative;
+  width: 1.9%;
+  display: inherit;
+  animation-duration: 3s;
+  animation-iteration-count: infinite;
+  animation-name: progress;
+  animation-timing-function: steps(1000);
+  background-color: #0078d4;
+  z-index: 100;
+}
+
+@keyframes progress {
+  0% {
+    transform: translateX(0) scaleX(1);
+  }
+  50% {
+    transform: translateX(2500%) scaleX(3);
+  }
+  100% {
+    transform: translateX(5000%) scaleX(1);
+  }
 }
