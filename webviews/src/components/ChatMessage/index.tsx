@@ -1,10 +1,11 @@
+import { memo } from "react";
 import { VSCodeDivider } from "@vscode/webview-ui-toolkit/react";
 import Markdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus as vscodeHighlightStyle } from "react-syntax-highlighter/dist/esm/styles/prism";
 import styles from "./styles.module.css";
 
-export const ChatMessage = (props: { role: string; content: string }) => {
+export const ChatMessage = memo((props: { role: string; content: string }) => {
   const title = props.role === "ai" ? "FireCoder" : "You";
   return (
     <>
@@ -38,4 +39,4 @@ export const ChatMessage = (props: { role: string; content: string }) => {
       <VSCodeDivider />
     </>
   );
-};
+});

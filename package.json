@@ -149,6 +149,11 @@
         },
         "firecoder.cloud.endpoint": {
           "type": "string",
+          "default": "https://llm-api.firecoder.cc/v1",
+          "description": ""
+        },
+        "firecoder.cloud.apiToken": {
+          "type": "string",
           "default": "",
           "description": ""
         },
@@ -191,6 +196,8 @@
   },
   "dependencies": {
     "@grafana/faro-core": "^1.3.5",
-    "@grafana/faro-web-sdk": "^1.3.5"
+    "@grafana/faro-web-sdk": "^1.3.5",
+    "@langchain/community": "^0.0.27",
+    "langchain": "^0.1.17"
   }
 }

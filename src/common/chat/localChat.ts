@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { randomUUID } from "crypto";
 import Logger from "../logger";
+import { servers } from "../server";
 
 const logCompletion = (uuid = randomUUID() as string) => {
   return {
@@ -33,13 +34,13 @@ const defualtParameters = {
   slot_id: -1,
 };
 
-export async function* sendChatRequest(
+export async function* sendChatRequestLocal(
   prompt: string,
   parameters: Record<string, any>,
-  uuid: string,
-  url: string
+  uuid: string
 ) {
   const loggerCompletion = logCompletion(uuid);
+  const url = servers["chat-medium"].serverUrl;
 
   const parametersForCompletion = {
     ...defualtParameters,
@@ -51,14 +52,12 @@ export async function* sendChatRequest(
 
     const startTime = performance.now();
 
-    let content = "";
     let timings;
     for await (const chunk of llama(prompt, parametersForCompletion, { url })) {
       // @ts-ignore
       if (chunk.data) {
         // @ts-ignore
-        content += chunk.data.content;
-        yield content;
+        yield chunk.data.content;
       }
 
       // @ts-ignore

@@ -1,7 +1,8 @@
 import * as vscode from "vscode";
 import { randomUUID } from "crypto";
 import { getPromptCompletion } from "../prompt";
-import { abortInterval, delay } from "../utils/intervals";
+import { abortInterval, delay } from "./utils/intervals";
+import { getAdditionalDocuments } from "./utils/getAdditionalDocuments";
 import Logger from "../logger";
 import { sendCompletionRequest } from "./localCompletion";
 import { servers } from "../server";
@@ -23,6 +24,7 @@ export const getInlineCompletionProvider = (
 ) => {
   let maxToken = 50;
   let expectedTime = 1000;
+
   const provider: vscode.InlineCompletionItemProvider = {
     provideInlineCompletionItems: async (
       document,
@@ -32,15 +34,19 @@ export const getInlineCompletionProvider = (
     ) => {
       const triggerAuto =
         context.triggerKind === vscode.InlineCompletionTriggerKind.Automatic;
+
       const currentInlineSuggestModeAuto = state.workspace.get(
         "inlineSuggestModeAuto"
       );
+
       if (currentInlineSuggestModeAuto !== true && triggerAuto === true) {
         return [];
       }
+
       if (context.selectedCompletionInfo) {
         return [];
       }
+
       const loggerCompletion = logCompletion();
 
       loggerCompletion.info("Completion: started");
@@ -50,57 +56,39 @@ export const getInlineCompletionProvider = (
         loggerCompletion.info("Completion: canceled");
         return [];
       }
+
       const { abortController, requestFinish } = abortInterval(token);
 
       const modelType = triggerAuto
         ? configuration.get("completion.autoMode")
         : configuration.get("completion.manuallyMode");
 
-      const serverUrl = configuration.get("cloud.use")
-        ? configuration.get("cloud.endpoint")
-        : servers[modelType].serverUrl;
+      const serverUrl = servers[modelType].serverUrl;
 
-      let additionalDocuments: vscode.TextDocument[] = [];
-
-      if (configuration.get("experimental.useopentabs")) {
-        const additionalDocumentsUri = vscode.window.tabGroups.all
-          .map((group) => group.tabs)
-          .flat()
-          .filter((tab) => !(tab.group.isActive && tab.isActive))
-          .filter(
-            (tab) =>
-              tab.input &&
-              "uri" in (tab.input as any) &&
-              ((tab.input as any).uri as vscode.Uri).scheme === "file"
-          )
-          .map((tab) => (tab.input as any).uri as vscode.Uri);
-        additionalDocuments = await Promise.all(
-          additionalDocumentsUri.map((uri) =>
-            vscode.workspace.openTextDocument(uri)
-          )
-        );
-      }
+      const additionalDocuments: vscode.TextDocument[] = configuration.get(
+        "experimental.useopentabs"
+      )
+        ? await getAdditionalDocuments()
+        : [];
 
       const prompt = await getPromptCompletion({
         activeDocument: document,
         additionalDocuments: additionalDocuments,
         position: position,
-        maxTokenExpect:
-          triggerAuto && !configuration.get("cloud.use") ? maxToken : 2000,
+        maxTokenExpect: triggerAuto ? maxToken : 2000,
         url: serverUrl,
       });
 
-      const parameters =
-        triggerAuto && !configuration.get("cloud.use")
-          ? {
-              n_predict: 128,
-              stop: ["\n"],
-            }
-          : {
-              n_predict: 512,
-              stop: [],
-              temperature: 0.5,
-            };
+      const parameters = triggerAuto
+        ? {
+            n_predict: 128,
+            stop: ["\n"],
+          }
+        : {
+            n_predict: 512,
+            stop: [],
+            temperature: 0.5,
+          };
 
       try {
         Logger.info(

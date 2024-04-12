@@ -27,6 +27,9 @@ const ConfigurationProperties = {
     default: "",
   },
   "cloud.endpoint": {
+    default: "https://llm-api.firecoder.cc/v1",
+  },
+  "cloud.apiToken": {
     default: "",
   },
   "cloud.use": {
@@ -61,6 +64,9 @@ interface ConfigurationPropertiesType
     possibleValues: string;
   };
   "cloud.endpoint": {
+    possibleValues: string;
+  };
+  "cloud.apiToken": {
     possibleValues: string;
   };
   "cloud.use": {

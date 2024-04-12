@@ -1,105 +1,57 @@
-import { vscode } from "./utilities/vscode";
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import "./App.css";
 import { ChatMessage } from "./components/ChatMessage";
-import { useState } from "react";
 import { ChatHelloMessage } from "./components/ChatHelloMessage";
+import { AutoScrollDown } from "./components/AutoScrollDown";
 import { useMessageListener } from "./hooks/messageListener";
-import { randomMessageId } from "./utilities/messageId";
 import TextArea from "./components/TextArea";
+import { useChat } from "./hooks/useChat";
 
 export const App = () => {
-  const [input, setInput] = useState("");
-  const [chatHistory, setChatHistory] = useState<
-    {
-      role: string;
-      content: string;
-      chatMessageId: string;
-    }[]
-  >([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const {
+    handleSubmit,
+    isLoading,
+    chatMessages,
+    input,
+    setInput,
+    startNewChat,
+  } = useChat();
 
   useMessageListener("startNewChat", () => {
-    setChatHistory([]);
+    startNewChat();
   });
-
-  const sendMessage = async (chatHistoryLocal: any) => {
-    const messageId = randomMessageId();
-    await vscode.postMessageCallback(
-      {
-        type: "sendMessage",
-        data: chatHistoryLocal,
-      },
-      (newMessage) => {
-        setChatHistory((chatHistoryLocal) => {
-          const messages = chatHistoryLocal.filter(
-            (message) => message.chatMessageId !== messageId
-          );
-
-          if (newMessage.done) {
-            setIsLoading(false);
-            return chatHistoryLocal;
-          }
-
-          return [
-            ...messages,
-            {
-              role: "ai",
-              content: newMessage.data,
-              chatMessageId: messageId,
-            } as any,
-          ];
-        });
-      }
-    );
-  };
-
-  const onSubmit = () => {
-    if (isLoading) {
-      return;
-    }
-    if (input === "") {
-      return;
-    }
-
-    setChatHistory((value) => {
-      const messageId = randomMessageId();
-
-      const newHistory = [
-        ...value,
-        {
-          role: "user",
-          content: input,
-          chatMessageId: messageId,
-        },
-      ];
-      setIsLoading(true);
-      sendMessage(newHistory);
-
-      return newHistory;
-    });
-    setInput("");
-  };
 
   return (
     <>
       <main>
         <div className="chat-history">
           <ChatHelloMessage />
-          {chatHistory.map((item) => (
-            <ChatMessage role={item.role} content={item.content} />
+          {chatMessages.map((message) => (
+            <ChatMessage
+              key={message.chatMessageId}
+              role={message.role}
+              content={message.content}
+            />
           ))}
+          <AutoScrollDown chatMessages={chatMessages} />
         </div>
         <div className="chat-input-block">
+          <div
+            className="progress-container"
+            role="progressbar"
+            style={{ display: isLoading ? "block" : "none" }}
+          >
+            <div className="progress-bit"></div>
+          </div>
           <TextArea
             value={input}
             onChange={(value) => setInput(value || "")}
-            onSubmit={onSubmit}
+            onSubmit={handleSubmit}
             buttonEnd={
               <VSCodeButton
                 appearance="icon"
                 disabled={isLoading}
-                onClick={onSubmit}
+                onClick={handleSubmit}
               >
                 <span
                   className={`codicon ${

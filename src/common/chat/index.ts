@@ -1,11 +1,16 @@
 import * as vscode from "vscode";
 import { randomUUID } from "crypto";
-import { HistoryMessage, getPromptChat } from "../prompt/promptChat";
+import { ChatMessage, getPromptChat } from "../prompt/promptChat";
 import Logger from "../logger";
-import { sendChatRequest } from "./localChat";
-import { servers } from "../server";
+import { sendChatRequestLocal as sendChatRequestLocal } from "./localChat";
 import { configuration } from "../utils/configuration";
 import statusBar from "../statusBar";
+import { sendChatRequestCloud } from "./cloudChat";
+import {
+  getHighlightedTextDetails,
+  humanMessageWithCodePrompt,
+  systemTemplate,
+} from "./utils/useHighlightedTextAsContext";
 
 const logCompletion = () => {
   const uuid = randomUUID();
@@ -17,12 +22,15 @@ const logCompletion = () => {
   };
 };
 
-export async function* chat(history: HistoryMessage[]) {
+export async function* chat(
+  history: ChatMessage[],
+  config?: {
+    provideHighlightedText?: boolean;
+  }
+) {
   const loggerCompletion = logCompletion();
 
   loggerCompletion.info("Chat: started");
-
-  const prompt = await getPromptChat(history);
 
   const parameters = {
     n_predict: 4096,
@@ -30,24 +38,39 @@ export async function* chat(history: HistoryMessage[]) {
     temperature: 0.7,
   };
 
-  const serverUrl = configuration.get("cloud.use")
-    ? configuration.get("cloud.endpoint")
-    : servers["chat-medium"].serverUrl;
-
   const { stopTask } = statusBar.startTask();
-
   try {
     Logger.info(`Start request;`, {
       component: "chat",
       sendTelemetry: true,
     });
 
-    yield* sendChatRequest(
-      prompt,
-      parameters,
-      loggerCompletion.uuid(),
-      serverUrl
-    );
+    if (config?.provideHighlightedText) {
+      const highlighted = getHighlightedTextDetails();
+
+      if (highlighted !== null && history.length === 1) {
+        const firstMessage = history.shift();
+        history.unshift({
+          role: "user",
+          content: await humanMessageWithCodePrompt.format({
+            highlightedCode: highlighted.content,
+            question: firstMessage?.content,
+          }),
+        });
+      }
+      history.unshift({
+        role: "system",
+        content: systemTemplate,
+      });
+    }
+
+    if (configuration.get("cloud.use")) {
+      yield* await sendChatRequestCloud(history, parameters);
+    } else {
+      const prompt = getPromptChat(history);
+
+      yield* sendChatRequestLocal(prompt, parameters, loggerCompletion.uuid());
+    }
 
     loggerCompletion.info("Request: finished");
   } catch (error) {
