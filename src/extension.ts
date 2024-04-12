@@ -19,9 +19,10 @@ export async function activate(context: vscode.ExtensionContext) {
     sendTelemetry: true,
   });
 
-  const isChatEnabled = configuration.get("experimental.chat");
-
-  if (isChatEnabled) {
+  if (
+    configuration.get("cloud.use") ||
+    configuration.get("experimental.chat")
+  ) {
     const provider = new ChatPanel(context.extensionUri);
     context.subscriptions.push(
       vscode.window.registerWebviewViewProvider(
@@ -67,45 +68,43 @@ export async function activate(context: vscode.ExtensionContext) {
 
   (async () => {
     if (configuration.get("cloud.use")) {
-      Logger.info("Use cloud", {
+      Logger.info("Use cloud for chat", {
         component: "main",
         sendTelemetry: true,
       });
-      const InlineCompletionProvider = getInlineCompletionProvider(context);
-      vscode.languages.registerInlineCompletionItemProvider(
-        { pattern: "**" },
-        InlineCompletionProvider
-      );
-    } else {
-      try {
-        const serversStarted = await Promise.all(
-          [
-            ...new Set([
-              configuration.get("completion.autoMode"),
-              configuration.get("completion.manuallyMode"),
-              ...(isChatEnabled ? ["chat-medium" as const] : []),
-            ]),
-          ].map((serverType) => servers[serverType].startServer())
-        );
+    }
 
-        if (serversStarted.some((serverStarted) => serverStarted)) {
-          Logger.info("Server inited", {
-            component: "main",
-            sendTelemetry: true,
-          });
-          const InlineCompletionProvider = getInlineCompletionProvider(context);
-          vscode.languages.registerInlineCompletionItemProvider(
-            { pattern: "**" },
-            InlineCompletionProvider
-          );
-        }
-      } catch (error) {
-        vscode.window.showErrorMessage((error as Error).message);
-        Logger.error(error, {
-          component: "server",
+    try {
+      const serversStarted = await Promise.all(
+        [
+          ...new Set([
+            configuration.get("completion.autoMode"),
+            configuration.get("completion.manuallyMode"),
+            ...(configuration.get("experimental.chat") &&
+            !configuration.get("cloud.use")
+              ? ["chat-medium" as const]
+              : []),
+          ]),
+        ].map((serverType) => servers[serverType].startServer())
+      );
+
+      if (serversStarted.some((serverStarted) => serverStarted)) {
+        Logger.info("Server inited", {
+          component: "main",
           sendTelemetry: true,
         });
+        const InlineCompletionProvider = getInlineCompletionProvider(context);
+        vscode.languages.registerInlineCompletionItemProvider(
+          { pattern: "**" },
+          InlineCompletionProvider
+        );
       }
+    } catch (error) {
+      vscode.window.showErrorMessage((error as Error).message);
+      Logger.error(error, {
+        component: "server",
+        sendTelemetry: true,
+      });
     }
 
     Logger.info("FireCoder is ready.", {

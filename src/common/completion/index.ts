@@ -63,9 +63,7 @@ export const getInlineCompletionProvider = (
         ? configuration.get("completion.autoMode")
         : configuration.get("completion.manuallyMode");
 
-      const serverUrl = configuration.get("cloud.use")
-        ? configuration.get("cloud.endpoint")
-        : servers[modelType].serverUrl;
+      const serverUrl = servers[modelType].serverUrl;
 
       const additionalDocuments: vscode.TextDocument[] = configuration.get(
         "experimental.useopentabs"
@@ -77,22 +75,20 @@ export const getInlineCompletionProvider = (
         activeDocument: document,
         additionalDocuments: additionalDocuments,
         position: position,
-        maxTokenExpect:
-          triggerAuto && !configuration.get("cloud.use") ? maxToken : 2000,
+        maxTokenExpect: triggerAuto ? maxToken : 2000,
         url: serverUrl,
       });
 
-      const parameters =
-        triggerAuto && !configuration.get("cloud.use")
-          ? {
-              n_predict: 128,
-              stop: ["\n"],
-            }
-          : {
-              n_predict: 512,
-              stop: [],
-              temperature: 0.5,
-            };
+      const parameters = triggerAuto
+        ? {
+            n_predict: 128,
+            stop: ["\n"],
+          }
+        : {
+            n_predict: 512,
+            stop: [],
+            temperature: 0.5,
+          };
 
       try {
         Logger.info(

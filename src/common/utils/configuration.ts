@@ -27,10 +27,10 @@ const ConfigurationProperties = {
     default: "",
   },
   "cloud.endpoint": {
-    default: "",
+    default: "https://llm-api.firecoder.cc/v1",
   },
   "cloud.apiToken": {
-    default: "apikey",
+    default: "",
   },
   "cloud.use": {
     default: false,

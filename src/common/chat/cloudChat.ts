@@ -17,9 +17,11 @@ export const sendChatRequestCloud = async (
   history: HistoryMessage[],
   parameters: Parameters
 ) => {
+  const apiKey = configuration.get("cloud.apiToken");
+
   const model = new ChatOpenAI({
     maxRetries: 0,
-    openAIApiKey: configuration.get("cloud.apiToken"),
+    openAIApiKey: apiKey,
     configuration: {
       baseURL: configuration.get("cloud.endpoint"),
     },
