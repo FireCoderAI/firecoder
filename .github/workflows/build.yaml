@@ -40,7 +40,7 @@ jobs:
       - name: Test
         run: |
           cd build
-          ctest -L 'curl' --verbose --timeout 900
+          ctest -L 'main' --verbose --timeout 900
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
