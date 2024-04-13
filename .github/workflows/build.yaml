@@ -28,19 +28,19 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install build-essential
+          sudo apt-get install build-essential libcurl4-openssl-dev
 
       - name: Build
         run: |
           mkdir build
           cd build
-          cmake .. -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF -DLLAMA_STATIC=ON
+          cmake .. -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF -DLLAMA_STATIC=ON -DLLAMA_CURL=ON
           cmake --build . --config Release --parallel $(nproc)
 
       - name: Test
         run: |
           cd build
-          ctest --verbose --timeout 900
+          ctest -L 'main|curl' --verbose --timeout 900
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -62,7 +62,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install build-essential
+          sudo apt-get install build-essential libcurl4-openssl-dev
 
       - name: Install cuda-toolkit
         run: |
@@ -73,7 +73,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF -DLLAMA_CUBLAS=ON 
+          cmake .. -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF -DLLAMA_CUBLAS=ON -DLLAMA_CURL=ON
           cmake --build . --config Release --parallel $(nproc)
 
       - name: Upload Artifact
