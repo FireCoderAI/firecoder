@@ -12,7 +12,7 @@ on:
         description: "use for pre-release server"
         required: false
         type: boolean
-        default: false
+        default: true
 
 jobs:
   build-cmake-linux:
@@ -40,7 +40,7 @@ jobs:
       - name: Test
         run: |
           cd build
-          ctest -L 'main|curl' --verbose --timeout 900
+          ctest --verbose --timeout 900
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -73,7 +73,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF -DLLAMA_CUBLAS=ON -DLLAMA_CURL=ON
+          cmake .. -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF -DLLAMA_CUBLAS=ON -DLLAMA_CURL=OFF
           cmake --build . --config Release --parallel $(nproc)
 
       - name: Upload Artifact
