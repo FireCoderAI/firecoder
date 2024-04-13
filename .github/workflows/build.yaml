@@ -8,6 +8,11 @@ on:
         required: true
         type: string
         default: "b1775"
+      pre-release:
+        description: "use for pre-release server"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build-cmake-linux:
@@ -322,4 +327,4 @@ jobs:
 
       - name: Upload spec
         run: |
-          ./mc cp ./spec.json r2/${{secrets.AWS_BUCKET}}/spec.json
+          ./mc cp ./spec.json r2/${{secrets.AWS_BUCKET}}/spec${{inputs.pre-release == true && '-pre-release' || ''}}.json
