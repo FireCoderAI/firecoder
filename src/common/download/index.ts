@@ -91,9 +91,7 @@ const getServerInfo = async (): Promise<ResourceInfo | null> => {
       ? "spec-pre-release.json"
       : "spec.json";
 
-    const response = await fetch(
-      `https://pub-ad9e0b7360bc4259878d0f81b89c5405.r2.dev/${specFile}`
-    );
+    const response = await fetch(`https://s3.firecoder.cc/${specFile}`);
 
     if (!response.ok) {
       return null;
