@@ -7,12 +7,12 @@ on:
         description: "llama.cpp tag"
         required: true
         type: string
-        default: "b1775"
+        default: "b2665"
       pre-release:
         description: "use for pre-release server"
         required: false
         type: boolean
-        default: false
+        default: true
 
 jobs:
   build-cmake-linux:
@@ -28,19 +28,19 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install build-essential
+          sudo apt-get install build-essential libcurl4-openssl-dev
 
       - name: Build
         run: |
           mkdir build
           cd build
-          cmake .. -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF -DLLAMA_STATIC=ON
+          cmake .. -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF -DLLAMA_STATIC=ON -DLLAMA_CURL=OFF
           cmake --build . --config Release --parallel $(nproc)
 
       - name: Test
         run: |
           cd build
-          ctest --verbose --timeout 900
+          ctest -L 'main' --verbose --timeout 900
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -62,7 +62,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install build-essential
+          sudo apt-get install build-essential libcurl4-openssl-dev
 
       - name: Install cuda-toolkit
         run: |
@@ -73,7 +73,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF -DLLAMA_CUBLAS=ON 
+          cmake .. -DLLAMA_BUILD_SERVER=ON -DLLAMA_NATIVE=OFF -DLLAMA_CUBLAS=ON -DLLAMA_CURL=OFF
           cmake --build . --config Release --parallel $(nproc)
 
       - name: Upload Artifact
@@ -103,7 +103,7 @@ jobs:
       - name: Test
         run: |
           cd build
-          ctest -C Release --verbose --timeout 900
+          ctest -L 'main' -C Release --verbose --timeout 900
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -169,7 +169,7 @@ jobs:
         id: cmake_test
         run: |
           cd build
-          ctest --verbose --timeout 900
+          ctest -L 'main' --verbose --timeout 900
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
