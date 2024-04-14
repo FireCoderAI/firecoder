@@ -159,7 +159,7 @@
         },
         "firecoder.cloud.use": {
           "type": "boolean",
-          "default": "false",
+          "default": false,
           "description": ""
         },
         "firecoder.server.usePreRelease": {
