@@ -35,6 +35,9 @@ const ConfigurationProperties = {
   "cloud.use": {
     default: false,
   },
+  "server.usePreRelease": {
+    default: false,
+  },
 } as const;
 
 interface ConfigurationPropertiesType
@@ -70,6 +73,9 @@ interface ConfigurationPropertiesType
     possibleValues: string;
   };
   "cloud.use": {
+    possibleValues: boolean;
+  };
+  "server.usePreRelease": {
     possibleValues: boolean;
   };
 }
