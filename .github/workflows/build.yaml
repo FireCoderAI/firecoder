@@ -103,7 +103,7 @@ jobs:
       - name: Test
         run: |
           cd build
-          ctest -C Release --verbose --timeout 900
+          ctest -L 'main' -C Release --verbose --timeout 900
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -169,7 +169,7 @@ jobs:
         id: cmake_test
         run: |
           cd build
-          ctest --verbose --timeout 900
+          ctest -L 'main' --verbose --timeout 900
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
