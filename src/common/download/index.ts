@@ -87,8 +87,12 @@ const getServerInfo = async (): Promise<ResourceInfo | null> => {
   const osmachine = os.machine();
   let spec: Spec | null = null;
   try {
+    const specFile = configuration.get("server.usePreRelease")
+      ? "spec-pre-release.json"
+      : "spec.json";
+
     const response = await fetch(
-      "https://pub-ad9e0b7360bc4259878d0f81b89c5405.r2.dev/spec.json"
+      `https://pub-ad9e0b7360bc4259878d0f81b89c5405.r2.dev/${specFile}`
     );
 
     if (!response.ok) {

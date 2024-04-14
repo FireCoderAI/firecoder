@@ -161,6 +161,11 @@
           "type": "boolean",
           "default": "false",
           "description": ""
+        },
+        "firecoder.server.usePreRelease": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use pre release server builds"
         }
       }
     }
