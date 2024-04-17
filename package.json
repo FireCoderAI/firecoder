@@ -113,13 +113,11 @@
           "markdownDescription": "Select a model for the automatic mode based on your system specifications.",
           "enum": [
             "base-small",
-            "base-medium",
-            "base-large"
+            "base-medium"
           ],
           "enumDescriptions": [
             "Use if you have only CPU.",
-            "Use if you have standard GPU.",
-            "Use if you have enterprise GPU."
+            "Use if you have standard GPU."
           ]
         },
         "firecoder.completion.manuallyMode": {
@@ -128,13 +126,11 @@
           "markdownDescription": "Select a model for the manually mode based on your system specifications.",
           "enum": [
             "base-small",
-            "base-medium",
-            "base-large"
+            "base-medium"
           ],
           "enumDescriptions": [
             "Use if you have only CPU.",
-            "Use if you have standard GPU.",
-            "Use if you have enterprise GPU."
+            "Use if you have standard GPU."
           ]
         },
         "firecoder.experimental.useopentabs": {

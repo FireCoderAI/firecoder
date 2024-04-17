@@ -155,19 +155,14 @@ const getModelInfo = async (
 ): Promise<ResourceInfo | null> => {
   const models: Record<TypeModel, { url: string; checksum: string }> = {
     "base-small": {
-      url: "https://huggingface.co/TheBloke/deepseek-coder-1.3b-base-GGUF/resolve/main/deepseek-coder-1.3b-base.Q8_0.gguf",
+      url: "https://huggingface.co/lmstudio-community/codegemma-2b-GGUF/resolve/main/codegemma-2b-Q5_K_M.gguf",
       checksum:
-        "9fcdcb283ef5b1d80ec7365b307c1ceab0c0f8ea079b49969f7febc06a11bccd",
+        "95f06d59cbf697da2fe9aa00b019c4f2e464718a956352ccbbb1cb436b98a2a7",
     },
     "base-medium": {
-      url: "https://huggingface.co/TheBloke/deepseek-coder-6.7B-base-GGUF/resolve/main/deepseek-coder-6.7b-base.Q8_0.gguf",
+      url: "https://huggingface.co/lmstudio-community/codegemma-7b-GGUF/resolve/main/codegemma-7b-Q5_K_M.gguf",
       checksum:
-        "a2f82242ac5e465037cbf1ed754f04f0be044ee196e1589905f9e4dcd0e6559d",
-    },
-    "base-large": {
-      url: "https://huggingface.co/TheBloke/deepseek-coder-33B-base-GGUF/resolve/main/deepseek-coder-33b-base.Q8_0.gguf",
-      checksum:
-        "9b9210b7de8c26d94773146613ee86844a714aae997223355bb520927627feff",
+        "eb00372705e7d5d30442750e8a7c72919c8e243bee52e1cce97fcfc1008c6143",
     },
     "chat-small": {
       url: "https://huggingface.co/TheBloke/deepseek-coder-1.3b-instruct-GGUF/resolve/main/deepseek-coder-1.3b-instruct.Q8_0.gguf",
@@ -263,7 +258,7 @@ export const downloadModel = async (typeModel: TypeModel) => {
   const modelFileInfo = await getModelInfo(typeModel);
 
   if (modelFileInfo === null) {
-    throw new Error("Server file info not found");
+    throw new Error("Model file info not found");
   }
 
   Logger.info(`Got model ${typeModel} file info`, {
