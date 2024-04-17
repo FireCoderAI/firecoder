@@ -82,11 +82,11 @@ export const getInlineCompletionProvider = (
       const parameters = triggerAuto
         ? {
             n_predict: 128,
-            stop: ["\n"],
+            stop: ["\n", "<|file_separator|>"],
           }
         : {
             n_predict: 512,
-            stop: [],
+            stop: ["<|file_separator|>"],
             temperature: 0.5,
           };
 

@@ -14,9 +14,6 @@ const modelsBase = {
   "base-medium": {
     port: 39721,
   },
-  "base-large": {
-    port: 39722,
-  },
 };
 export type TypeModelsBase = keyof typeof modelsBase;
 
@@ -310,7 +307,6 @@ class Server {
 export const servers = {
   "base-small": new Server("base-small"),
   "base-medium": new Server("base-medium"),
-  "base-large": new Server("base-large"),
   "chat-small": new Server("chat-small"),
   "chat-medium": new Server("chat-medium"),
   "chat-large": new Server("chat-large"),

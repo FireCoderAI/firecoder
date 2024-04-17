@@ -96,7 +96,7 @@ const processingDocumentWithPosition = async ({
       tokenDifference <= maxDifference
     ) {
       return {
-        documentText: `${textBeforeSlice}<｜fim▁hole｜>${textAfterSlice}`,
+        documentText: `${textBeforeSlice}<|fim_suffix|>${textAfterSlice}`,
         documentTokens: tokens,
       };
     }
@@ -244,7 +244,13 @@ export const getPromptCompletion = async ({
       );
 
       additionalDocumentsText +=
-        "\n" + getRelativePath(document.uri) + "\n" + documentText;
+        "/" +
+        getRelativePath(document.uri) +
+        "\n" +
+        "<|fim_prefix|>" +
+        documentText +
+        "<|fim_middle|>" +
+        "<|file_separator|>";
       restTokens -= documentTokens;
     }
   }
@@ -252,9 +258,13 @@ export const getPromptCompletion = async ({
   const activeDocumentFileName =
     additionalDocumentsText === ""
       ? ""
-      : "\n" + getRelativePath(activeDocument.uri) + "\n";
+      : "\n" +
+        "/" +
+        getRelativePath(activeDocument.uri) +
+        "\n" +
+        "<|fim_prefix|>";
 
-  const prompt = `<｜fim▁begin｜>${additionalDocumentsText}${activeDocumentFileName}${activeDocumentText}<｜fim▁end｜>`;
+  const prompt = `${additionalDocumentsText}${activeDocumentFileName}${activeDocumentText}<|fim_middle|>`;
 
   return prompt;
 };
