@@ -127,6 +127,7 @@ class Server {
         ...(useGPU ? ["--n-gpu-layers", "100"] : []),
         "--cont-batching",
         "--embedding",
+        "--slots-endpoint-disable",
         "--log-disable",
       ],
       {
@@ -143,7 +144,9 @@ class Server {
           msgString.includes('"path":"/health"') ||
           msgString.includes('"path":"/tokenize"') ||
           msgString.includes("/model.json") ||
-          msgString.includes("sampled token:")
+          msgString.includes("process_single_task") ||
+          msgString.includes("sampled token:") ||
+          msgString.includes("update_slots")
         ) {
           return;
         }
@@ -159,7 +162,9 @@ class Server {
           msgString.includes('"path":"/health"') ||
           msgString.includes('"path":"/tokenize"') ||
           msgString.includes("/model.json") ||
-          msgString.includes("sampled token:")
+          msgString.includes("process_single_task") ||
+          msgString.includes("sampled token:") ||
+          msgString.includes("update_slots")
         ) {
           return;
         }

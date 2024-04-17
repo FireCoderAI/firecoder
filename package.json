@@ -47,7 +47,7 @@
           "id": "firecoder.chat-gui",
           "name": "",
           "visibility": "visible",
-          "when": "config.firecoder.experimental.chat"
+          "when": "config.firecoder.experimental.chat || config.firecoder.cloud.use"
         }
       ]
     },

@@ -19,26 +19,17 @@ export async function activate(context: vscode.ExtensionContext) {
     sendTelemetry: true,
   });
 
-  if (
-    configuration.get("cloud.use") ||
-    configuration.get("experimental.chat")
-  ) {
-    const provider = new ChatPanel(context.extensionUri);
-    context.subscriptions.push(
-      vscode.window.registerWebviewViewProvider(
-        "firecoder.chat-gui",
-        provider,
-        {
-          webviewOptions: { retainContextWhenHidden: true },
-        }
-      )
-    );
-    context.subscriptions.push(
-      vscode.commands.registerCommand("firecoder.startNewChat", async () => {
-        await provider.sendMessageToWebview("startNewChat", {});
-      })
-    );
-  }
+  const provider = new ChatPanel(context.extensionUri);
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider("firecoder.chat-gui", provider, {
+      webviewOptions: { retainContextWhenHidden: true },
+    })
+  );
+  context.subscriptions.push(
+    vscode.commands.registerCommand("firecoder.startNewChat", async () => {
+      await provider.sendMessageToWebview("startNewChat", {});
+    })
+  );
 
   statusBar.init(context);
 
@@ -65,6 +56,38 @@ export async function activate(context: vscode.ExtensionContext) {
       );
     })
   );
+
+  vscode.workspace.onDidChangeConfiguration(async (event) => {
+    if (
+      event.affectsConfiguration("firecoder.cloud.use") ||
+      event.affectsConfiguration("firecoder.experimental.chat") ||
+      event.affectsConfiguration("firecoder.completion.manuallyMode") ||
+      event.affectsConfiguration("firecoder.completion.autoMode") ||
+      event.affectsConfiguration(
+        "firecoder.experimental.useGpu.linux.nvidia"
+      ) ||
+      event.affectsConfiguration("firecoder.experimental.useGpu.osx.metal") ||
+      event.affectsConfiguration(
+        "firecoder.experimental.useGpu.windows.nvidia"
+      ) ||
+      event.affectsConfiguration("firecoder.server.usePreRelease")
+    ) {
+      Object.values(servers).forEach((server) => server.stopServer());
+      const serversToStart = [
+        ...new Set([
+          configuration.get("completion.autoMode"),
+          configuration.get("completion.manuallyMode"),
+          ...(configuration.get("experimental.chat") &&
+          !configuration.get("cloud.use")
+            ? ["chat-medium" as const]
+            : []),
+        ]),
+      ];
+      await Promise.all(
+        serversToStart.map((serverType) => servers[serverType].startServer())
+      );
+    }
+  });
 
   (async () => {
     if (configuration.get("cloud.use")) {

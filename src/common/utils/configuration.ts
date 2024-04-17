@@ -89,6 +89,8 @@ class Configuration {
   public get<T extends keyof ConfigurationPropertiesType>(
     property: T
   ): ConfigurationPropertiesType[T]["possibleValues"] {
+    this.configuration = vscode.workspace.getConfiguration("firecoder");
+
     return (
       this.configuration.get(property) ??
       ConfigurationProperties[property]["default"]
