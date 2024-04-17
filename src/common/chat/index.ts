@@ -48,7 +48,7 @@ export async function* chat(
     if (config?.provideHighlightedText) {
       const highlighted = getHighlightedTextDetails();
 
-      if (highlighted !== null && history.length === 1) {
+      if (highlighted !== null) {
         const firstMessage = history.shift();
         history.unshift({
           role: "user",
@@ -57,11 +57,11 @@ export async function* chat(
             question: firstMessage?.content,
           }),
         });
+        history.unshift({
+          role: "system",
+          content: systemTemplate,
+        });
       }
-      history.unshift({
-        role: "system",
-        content: systemTemplate,
-      });
     }
 
     if (configuration.get("cloud.use")) {
