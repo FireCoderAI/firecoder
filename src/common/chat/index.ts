@@ -26,6 +26,7 @@ export async function* chat(
   history: ChatMessage[],
   config?: {
     provideHighlightedText?: boolean;
+    abortController: AbortController;
   }
 ) {
   const loggerCompletion = logCompletion();
@@ -36,6 +37,7 @@ export async function* chat(
     n_predict: 4096,
     stop: [],
     temperature: 0.7,
+    controller: config?.abortController,
   };
 
   const { stopTask } = statusBar.startTask();

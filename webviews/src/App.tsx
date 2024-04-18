@@ -15,6 +15,7 @@ export const App = () => {
     input,
     setInput,
     startNewChat,
+    stop,
   } = useChat();
 
   useMessageListener("startNewChat", () => {
@@ -50,14 +51,11 @@ export const App = () => {
             buttonEnd={
               <VSCodeButton
                 appearance="icon"
-                disabled={isLoading}
-                onClick={handleSubmit}
+                onClick={isLoading ? stop : handleSubmit}
               >
                 <span
                   className={`codicon ${
-                    isLoading
-                      ? "codicon-loading codicon-modifier-spin codicon-modifier-disabled"
-                      : "codicon-send"
+                    isLoading ? "codicon-debug-stop" : "codicon-send"
                   }`}
                 ></span>
               </VSCodeButton>
