@@ -1,5 +1,7 @@
 import type { WebviewApi } from "vscode-webview";
 import { randomMessageId } from "./messageId";
+import { ChatMessage } from "../hooks/useChat";
+import { Transform } from "./transformCallback2AsyncGenerator";
 
 export type MessageType =
   | {
@@ -11,7 +13,7 @@ export type MessageType =
   | {
       type: "e2w-response";
       command: string;
-      messageId: string;
+      id: string;
       done: boolean;
       data: any;
     };
@@ -29,9 +31,9 @@ class VSCodeAPIWrapper {
 
       if (
         newMessage.type === "e2w-response" &&
-        newMessage.messageId in this.messageCallback
+        newMessage.id in this.messageCallback
       ) {
-        this.messageCallback[newMessage.messageId](newMessage);
+        this.messageCallback[newMessage.id](newMessage);
         return;
       }
 
@@ -45,15 +47,21 @@ class VSCodeAPIWrapper {
     });
   }
 
-  public async postMessageCallback(
+  public postMessageCallback(
     message: { type: string; data: any },
-    messageCallback?: (message: any) => void
+    messageCallback?: (message: any) => void,
+    config?: { signal?: AbortSignal }
   ) {
     if (this.vsCodeApi) {
       const messageId = randomMessageId();
       if (messageCallback) {
         this.addMessageListener(messageId, messageCallback);
       }
+
+      config?.signal?.addEventListener("abort", () => {
+        this.abortOperation(messageId);
+      });
+
       this.vsCodeApi.postMessage({
         ...message,
         messageId,
@@ -62,11 +70,46 @@ class VSCodeAPIWrapper {
       console.log(message);
     }
   }
+
+  public startGeneration(
+    chatHistory: ChatMessage[],
+    config?: {
+      signal: AbortSignal;
+    }
+  ) {
+    const transform = new Transform<string>();
+    this.postMessageCallback(
+      {
+        data: chatHistory,
+        type: "sendMessage",
+      },
+      (message) => {
+        if (message.done) {
+          transform.close();
+        } else {
+          transform.push(message.data);
+        }
+      },
+      {
+        signal: config?.signal,
+      }
+    );
+
+    return transform.stream();
+  }
+
   public addMessageListener(
     commandOrMessageId: string,
     callback: (message: any) => void
   ) {
     this.messageCallback[commandOrMessageId] = callback;
+  }
+
+  private abortOperation(messageId: string) {
+    this.vsCodeApi?.postMessage({
+      type: "abort-generate",
+      id: messageId,
+    });
   }
 }
 

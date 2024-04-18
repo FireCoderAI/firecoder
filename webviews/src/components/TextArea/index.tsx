@@ -54,7 +54,7 @@ const TextArea = ({
               onSubmit();
             }
 
-            event.preventDefault(); // Prevents the addition of a new line in the text field
+            event.preventDefault();
           }
         }}
       ></textarea>
@@ -63,5 +63,4 @@ const TextArea = ({
   );
 };
 
-// 24 42 61
 export default TextArea;

@@ -1,8 +1,9 @@
-import { Disposable, Webview, window, Uri } from "vscode";
+import { Disposable, Webview, Uri } from "vscode";
 import * as vscode from "vscode";
 import { getUri } from "../utils/getUri";
 import { getNonce } from "../utils/getNonce";
 import { chat } from "../chat";
+import { ChatMessage } from "../prompt/promptChat";
 
 export type MessageType =
   | {
@@ -13,8 +14,8 @@ export type MessageType =
     }
   | {
       type: "e2w-response";
+      id: string;
       command: string;
-      messageId: string;
       done: boolean;
       data: any;
     };
@@ -22,6 +23,7 @@ export type MessageType =
 export class ChatPanel implements vscode.WebviewViewProvider {
   private disposables: Disposable[] = [];
   private webview: Webview | undefined;
+  private messageCallback: Record<string, any> = {};
 
   constructor(private readonly extensionUri: vscode.Uri) {}
 
@@ -94,32 +96,66 @@ export class ChatPanel implements vscode.WebviewViewProvider {
   private setWebviewMessageListener(webview: Webview) {
     webview.onDidReceiveMessage(
       async (message: any) => {
-        const sendResponse = (messageToResponse: any, done: boolean) => {
-          this.postMessage({
-            type: "e2w-response",
-            command: message.type,
-            messageId: message.messageId,
-            data: messageToResponse,
-            done: done,
-          });
-        };
+        if (message.type in this.messageCallback) {
+          this.messageCallback[message.type]();
+          return;
+        }
         const type = message.type;
-        const data = message.data;
 
         switch (type) {
           case "sendMessage":
-            for await (const message of chat(data, {
-              provideHighlightedText: true,
-            })) {
-              sendResponse(message, false);
-            }
-            sendResponse("", true);
+            await this.handleStartGeneration({
+              chatMessage: message.data,
+              messageId: message.messageId,
+              messageType: message.type,
+            });
             return;
         }
       },
       undefined,
       this.disposables
     );
+  }
+
+  private addMessageListener(
+    commandOrMessageId: string,
+    callback: (message: any) => void
+  ) {
+    this.messageCallback[commandOrMessageId] = callback;
+  }
+
+  private async handleStartGeneration({
+    messageId,
+    messageType,
+    chatMessage,
+  }: {
+    messageId: string;
+    messageType: string;
+    chatMessage: ChatMessage[];
+  }) {
+    const sendResponse = (messageToResponse: any, done: boolean) => {
+      this.postMessage({
+        type: "e2w-response",
+        id: messageId,
+        command: messageType,
+        data: messageToResponse,
+        done: done,
+      });
+    };
+    const abortController = new AbortController();
+
+    this.addMessageListener("abort-generate", () => {
+      abortController.abort();
+    });
+
+    for await (const message of chat(chatMessage, {
+      provideHighlightedText: true,
+      abortController,
+    })) {
+      sendResponse(message, false);
+    }
+
+    sendResponse("", true);
   }
 
   public async sendMessageToWebview(

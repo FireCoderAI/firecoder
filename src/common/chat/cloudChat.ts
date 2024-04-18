@@ -11,6 +11,7 @@ import { configuration } from "../utils/configuration";
 type Parameters = {
   temperature: number;
   n_predict: number;
+  controller?: AbortController;
 };
 
 export const sendChatRequestCloud = async (
@@ -45,6 +46,9 @@ export const sendChatRequestCloud = async (
   });
 
   const stream = await model.pipe(parser).stream(messages, {
+    configurable: {
+      signal: parameters.controller,
+    },
     maxConcurrency: 1,
   });
 

@@ -53,7 +53,10 @@ export async function* sendChatRequestLocal(
     const startTime = performance.now();
 
     let timings;
-    for await (const chunk of llama(prompt, parametersForCompletion, { url })) {
+    for await (const chunk of llama(prompt, parametersForCompletion, {
+      url,
+      controller: parameters.controller,
+    })) {
       // @ts-ignore
       if (chunk.data) {
         // @ts-ignore
