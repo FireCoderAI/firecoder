@@ -1,27 +1,23 @@
 import * as vscode from "vscode";
 import path from "node:path";
 import Logger from "../logger";
+import { tokenizer } from "./tokenizer";
 
-const tokenize = async (text: string, url: string) => {
+const tokenize = async (text: string): Promise<number> => {
   try {
-    const body = JSON.stringify({
-      content: text,
-    });
-    const res = await fetch(`${url}/tokenize`, {
-      body: body,
-      method: "POST",
-      headers: {
-        Connection: "keep-alive",
-        "Content-Type": "application/json",
-      },
-      keepalive: true,
-    });
+    const startLocal = performance.now();
 
-    const json = (await res.json()) as {
-      tokens: number[];
-    };
+    const tokens = tokenizer.encode(text);
 
-    return json.tokens.length;
+    const endLocal = performance.now();
+
+    Logger.debug(
+      `Tokenized ${text.length} local: ${(endLocal - startLocal).toFixed(
+        2
+      )} CountTokens: ${tokens.length}`
+    );
+
+    return tokens.length + 1;
   } catch (error) {
     return 0;
   }
@@ -29,9 +25,10 @@ const tokenize = async (text: string, url: string) => {
 
 const getTextNormalized = (text: string) => {
   return text
-    .replace("<｜fim▁begin｜>", "")
-    .replace("<｜fim▁hole｜>", "")
-    .replace("<｜fim▁end｜>", "");
+    .replace("<|fim_prefix|>", "")
+    .replace("<|fim_middle|>", "")
+    .replace("<|fim_suffix|>", "")
+    .replace("<|file_separator|>", "");
 };
 
 const spliteDocumentByPosition = (
@@ -54,25 +51,19 @@ const spliteDocumentByPosition = (
   );
   return [textBefore, textAfter];
 };
-const inverseSquareRoot = (x: number) => 1 / Math.sqrt(x);
-const randomFromInterval = (min: number, max: number) =>
-  Math.floor(Math.random() * (max - min + 1) + min);
 
 const processingDocumentWithPosition = async ({
   document,
   position,
-  url,
   maxToken,
 }: {
   document: vscode.TextDocument;
   position: vscode.Position;
-  url: string;
   maxToken: number;
 }) => {
   const [textBefore, textAfter] = spliteDocumentByPosition(document, position);
 
-  let beforeTokens = maxToken / 2;
-  let afterTokens = maxToken / 2;
+  let textLength = maxToken;
 
   let textBeforeSlice: string;
   let textAfterSlice: string;
@@ -80,15 +71,15 @@ const processingDocumentWithPosition = async ({
   let tokens = 0;
 
   while (true) {
-    textBeforeSlice = textBefore.slice(beforeTokens * 3 * -1);
-    textAfterSlice = textAfter.slice(0, afterTokens * 3);
+    textBeforeSlice = textBefore.slice((textLength / 2) * 3 * -1);
+    textAfterSlice = textAfter.slice(0, (textLength / 2) * 3);
 
-    tokens = await tokenize(textBeforeSlice + textAfterSlice, url);
+    tokens = await tokenize(textBeforeSlice + textAfterSlice);
+
     const tokenDifference = Math.abs(maxToken - tokens);
-    const maxDifference = Math.max(maxToken * 0.1, 10);
+    const maxDifference = Math.max(maxToken * 0.1, 50);
 
-    const documentName = document.fileName;
-    Logger.debug(`${documentName} document tokens: ${tokens}`);
+    Logger.debug(`${document.fileName} document tokens: ${tokens}`);
     if (
       (tokens <= maxToken &&
         textBeforeSlice.length >= textBefore.length &&
@@ -102,64 +93,41 @@ const processingDocumentWithPosition = async ({
     }
 
     if (tokens <= maxToken) {
-      beforeTokens +=
-        inverseSquareRoot(beforeTokens / maxToken) *
-        randomFromInterval(30, 60) *
-        4;
-      afterTokens +=
-        inverseSquareRoot(afterTokens / maxToken) *
-        randomFromInterval(30, 60) *
-        4;
+      textLength += 30;
     } else {
-      beforeTokens -=
-        inverseSquareRoot(beforeTokens / maxToken) *
-        randomFromInterval(30, 60) *
-        4;
-      afterTokens -=
-        inverseSquareRoot(afterTokens / maxToken) *
-        randomFromInterval(30, 60) *
-        4;
+      textLength -= 60;
     }
   }
 };
 
 const processingDocument = async ({
   document,
-  url,
   maxToken,
 }: {
   document: vscode.TextDocument;
-  url: string;
   maxToken: number;
 }) => {
   const text = getTextNormalized(document.getText());
 
-  let tokens = maxToken;
+  let textLength = maxToken;
 
   let textSlice: string;
 
+  let tokens = 0;
+
   while (true) {
-    Logger.debug("New iteration of the while loop");
+    textSlice = text.slice(0, Number(textLength.toFixed(0)) * 3);
 
-    textSlice = text.slice(0, Number(tokens.toFixed(0)) * 3);
-
-    tokens = await tokenize(textSlice, url);
+    tokens = await tokenize(textSlice);
 
     const tokenDifference = Math.abs(maxToken - tokens);
-    const maxDifference = Math.max(maxToken * 0.05, 10);
+    const maxDifference = Math.max(maxToken * 0.1, 50);
 
-    const logMessage = `Text slice length: ${textSlice.length}, Tokens after tokenization: ${tokens}, Max token: ${maxToken}, Token difference: ${tokenDifference}`;
-
-    Logger.debug(logMessage);
-
-    const documentName = document.fileName;
-    Logger.debug(`${documentName} document tokens: ${tokens}`);
+    Logger.debug(`${document.fileName} document tokens: ${tokens}`);
     if (
       (tokens <= maxToken && textSlice.length >= text.length) ||
       tokenDifference <= maxDifference
     ) {
-      Logger.debug(`${documentName} document tokens resualt: ${tokens}`);
-
       return {
         documentText: textSlice,
         documentTokens: tokens,
@@ -167,23 +135,9 @@ const processingDocument = async ({
     }
 
     if (tokens <= maxToken) {
-      const ratio = tokens / maxToken;
-      Logger.debug(`Calculating increment for ratio: ${ratio}`);
-
-      const increment = inverseSquareRoot(ratio) * randomFromInterval(10, 20);
-      Logger.debug(`Increment calculated: ${increment}`);
-
-      tokens += increment;
-      Logger.debug(`Tokens incremented by: ${increment}`);
+      textLength += 30;
     } else {
-      const ratio = tokens / maxToken;
-      Logger.debug(`Calculating decrement for ratio: ${ratio}`);
-
-      const decrement = inverseSquareRoot(ratio) * randomFromInterval(250, 500);
-      Logger.debug(`Decrement calculated: ${decrement}`);
-
-      tokens -= decrement;
-      Logger.debug(`Tokens decremented by: ${decrement}`);
+      textLength -= 60;
     }
   }
 };
@@ -199,15 +153,15 @@ export const getPromptCompletion = async ({
   additionalDocuments,
   position,
   maxTokenExpect = 200,
-  url,
 }: {
   activeDocument: vscode.TextDocument;
   additionalDocuments: vscode.TextDocument[];
   position: vscode.Position;
   maxTokenExpect: number;
-  url: string;
 }) => {
-  const maxTokenHardLimit = 10000;
+  const start = performance.now();
+
+  const maxTokenHardLimit = 6000;
   const maxToken =
     maxTokenExpect > maxTokenHardLimit ? maxTokenHardLimit : maxTokenExpect;
 
@@ -218,7 +172,6 @@ export const getPromptCompletion = async ({
     document: activeDocument,
     position,
     maxToken,
-    url,
   });
 
   let additionalDocumentsText = "";
@@ -235,7 +188,6 @@ export const getPromptCompletion = async ({
       const { documentText, documentTokens } = await processingDocument({
         document,
         maxToken: restTokens,
-        url,
       });
       const documentName = document.fileName;
 
@@ -263,7 +215,9 @@ export const getPromptCompletion = async ({
         getRelativePath(activeDocument.uri) +
         "\n" +
         "<|fim_prefix|>";
+  const end = performance.now();
 
+  Logger.debug(`Full Time: ${(end - start).toFixed(2)}ms`);
   const prompt = `${additionalDocumentsText}${activeDocumentFileName}${activeDocumentText}<|fim_middle|>`;
 
   return prompt;
