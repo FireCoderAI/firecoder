@@ -76,7 +76,6 @@ export const getInlineCompletionProvider = (
         additionalDocuments: additionalDocuments,
         position: position,
         maxTokenExpect: triggerAuto ? maxToken : 2000,
-        url: serverUrl,
       });
 
       const parameters = triggerAuto

@@ -7,10 +7,12 @@ import { FirecoderTelemetrySenderInstance } from "./common/telemetry";
 import { configuration } from "./common/utils/configuration";
 import { state } from "./common/utils/state";
 import { ChatPanel } from "./common/panel/chat";
+import { tokenizer } from "./common/prompt/tokenizer";
 
 export async function activate(context: vscode.ExtensionContext) {
   FirecoderTelemetrySenderInstance.init(context);
   vscode.env.createTelemetryLogger(FirecoderTelemetrySenderInstance);
+
   state.global.init(context.globalState);
   state.workspace.init(context.workspaceState);
 
@@ -32,6 +34,7 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   statusBar.init(context);
+  await tokenizer.init();
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
