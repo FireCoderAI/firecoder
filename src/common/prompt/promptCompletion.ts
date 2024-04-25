@@ -25,10 +25,10 @@ const tokenize = async (text: string): Promise<number> => {
 
 const getTextNormalized = (text: string) => {
   return text
-    .replace("<|fim_prefix|>", "")
-    .replace("<|fim_middle|>", "")
-    .replace("<|fim_suffix|>", "")
-    .replace("<|file_separator|>", "");
+    .replaceAll("<|fim_prefix|>", "")
+    .replaceAll("<|fim_middle|>", "")
+    .replaceAll("<|fim_suffix|>", "")
+    .replaceAll("<|file_separator|>", "");
 };
 
 const spliteDocumentByPosition = (
@@ -161,7 +161,7 @@ export const getPromptCompletion = async ({
 }) => {
   const start = performance.now();
 
-  const maxTokenHardLimit = 6000;
+  const maxTokenHardLimit = 4000;
   const maxToken =
     maxTokenExpect > maxTokenHardLimit ? maxTokenHardLimit : maxTokenExpect;
 
@@ -209,7 +209,7 @@ export const getPromptCompletion = async ({
 
   const activeDocumentFileName =
     additionalDocumentsText === ""
-      ? ""
+      ? "<|fim_prefix|>"
       : "\n" +
         "/" +
         getRelativePath(activeDocument.uri) +

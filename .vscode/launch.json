@@ -6,12 +6,16 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Run Extension",
+      "name": "Watch & Launch Extension",
       "type": "extensionHost",
       "request": "launch",
       "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
-      "outFiles": ["${workspaceFolder}/out/**/*.js"],
-      "preLaunchTask": "${defaultBuildTask}"
+      "outFiles": ["${workspaceFolder}/dist/*.js"],
+      "preLaunchTask": "npm: watch",
+      "debugWebviews": true,
+      "runtimeExecutable": "${execPath}",
+      "smartStep": true,
+      "sourceMaps": true
     },
     {
       "name": "Extension Tests",
