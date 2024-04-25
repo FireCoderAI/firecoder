@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { randomUUID } from "crypto";
 import Logger from "../logger";
-import statusBar from "../statusBar";
 
 const logCompletion = (uuid = randomUUID() as string) => {
   return {
@@ -36,15 +35,13 @@ const defualtParameters = {
   slot_id: -1,
 };
 
-export const sendCompletionRequest = async (
+export const sendCompletionRequestLocal = async (
   prompt: string,
   parameters: Record<string, any>,
   abortController: AbortController,
   uuid: string,
   url: string
 ) => {
-  const { stopTask } = statusBar.startTask();
-
   const loggerCompletion = logCompletion(uuid);
 
   const parametersForCompletion = {
@@ -120,7 +117,5 @@ export const sendCompletionRequest = async (
     const errorMessage = Error.message;
     vscode.window.showErrorMessage(errorMessage);
     return null;
-  } finally {
-    stopTask();
   }
 };
