@@ -55,9 +55,10 @@ Instructions:
 - If the answer expects any code examples, please provide examples. 
 
 Rules for code in response:
-- Suggest only changes. 
+- Suggest only changes.
 - Provide only the necessary code.
 - Write as less as possible comments.
+- Wrap in Markdown with type of language.
 `;
 
 export const humanMessageWithCodePrompt = new PromptTemplate({
