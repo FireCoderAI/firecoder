@@ -1,1 +1,1 @@
-export const randomMessageId: () => string = () => global.crypto.randomUUID();
+export const randomId: () => string = () => global.crypto.randomUUID();

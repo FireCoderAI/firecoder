@@ -1,5 +1,5 @@
 import type { WebviewApi } from "vscode-webview";
-import { randomMessageId } from "./messageId";
+import { randomId } from "./messageId";
 import { ChatMessage } from "../hooks/useChat";
 import { Transform } from "./transformCallback2AsyncGenerator";
 
@@ -12,10 +12,31 @@ export type MessageType =
     }
   | {
       type: "e2w-response";
-      command: string;
       id: string;
       done: boolean;
       data: any;
+    };
+
+type MessageToExtention =
+  | {
+      type: "send-message";
+      data: ChatMessage[];
+    }
+  | {
+      type: "abort-generate";
+      id: string;
+    }
+  | {
+      type: "get-chat-history";
+      chatId: string;
+    }
+  | {
+      type: "save-chat-history";
+      chatId: string;
+      data: ChatMessage[];
+    }
+  | {
+      type: "get-chats";
     };
 
 class VSCodeAPIWrapper {
@@ -48,23 +69,23 @@ class VSCodeAPIWrapper {
   }
 
   public postMessageCallback(
-    message: { type: string; data: any },
+    message: MessageToExtention,
     messageCallback?: (message: any) => void,
     config?: { signal?: AbortSignal }
   ) {
     if (this.vsCodeApi) {
-      const messageId = randomMessageId();
+      const id = randomId();
       if (messageCallback) {
-        this.addMessageListener(messageId, messageCallback);
+        this.addMessageListener(id, messageCallback);
       }
 
       config?.signal?.addEventListener("abort", () => {
-        this.abortOperation(messageId);
+        this.abortOperation();
       });
 
       this.vsCodeApi.postMessage({
         ...message,
-        messageId,
+        id,
       });
     } else {
       console.log(message);
@@ -81,7 +102,7 @@ class VSCodeAPIWrapper {
     this.postMessageCallback(
       {
         data: chatHistory,
-        type: "sendMessage",
+        type: "send-message",
       },
       (message) => {
         if (message.done) {
@@ -98,6 +119,43 @@ class VSCodeAPIWrapper {
     return transform.stream();
   }
 
+  public getChatHistory(chatId: string) {
+    return new Promise<ChatMessage[] | null>((resolve) => {
+      this.postMessageCallback(
+        {
+          type: "get-chat-history",
+          chatId: chatId,
+        },
+        (message) => {
+          resolve(message.data);
+        }
+      );
+    });
+  }
+
+  public saveChatHistory(chatId: string, history: ChatMessage[]) {
+    return new Promise<void>((resolve) => {
+      this.postMessageCallback(
+        {
+          type: "save-chat-history",
+          chatId: chatId,
+          data: history,
+        },
+        (message) => {
+          resolve(message.data);
+        }
+      );
+    });
+  }
+
+  public getChats() {
+    return new Promise<ChatMessage[][]>((resolve) => {
+      this.postMessageCallback({
+        type: "get-chats",
+      });
+    });
+  }
+
   public addMessageListener(
     commandOrMessageId: string,
     callback: (message: any) => void
@@ -105,10 +163,9 @@ class VSCodeAPIWrapper {
     this.messageCallback[commandOrMessageId] = callback;
   }
 
-  private abortOperation(messageId: string) {
+  private abortOperation() {
     this.vsCodeApi?.postMessage({
       type: "abort-generate",
-      id: messageId,
     });
   }
 }
