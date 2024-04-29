@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { VSCodeDivider } from "@vscode/webview-ui-toolkit/react";
+import { VSCodeButton, VSCodeDivider } from "@vscode/webview-ui-toolkit/react";
 import Markdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus as vscodeHighlightStyle } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -16,15 +16,31 @@ export const ChatMessage = memo((props: { role: string; content: string }) => {
             code(props) {
               const { children, className, node, ...rest } = props;
               const match = /language-(\w+)/.exec(className || "");
+
               return match ? (
-                // @ts-ignore
-                <SyntaxHighlighter
-                  {...rest}
-                  PreTag="div"
-                  children={String(children).replace(/\n$/, "")}
-                  language={match[1]}
-                  style={vscodeHighlightStyle}
-                />
+                <div className={styles["code-container"]}>
+                  <div className={styles["copy-container"]}>
+                    <VSCodeButton
+                      appearance="icon"
+                      onClick={() =>
+                        navigator.clipboard.writeText(
+                          String(children).replace(/\n$/, "")
+                        )
+                      }
+                    >
+                      <span className="codicon codicon-copy"></span>
+                    </VSCodeButton>
+                  </div>
+
+                  {/* @ts-ignore */}
+                  <SyntaxHighlighter
+                    {...rest}
+                    PreTag="div"
+                    children={String(children).replace(/\n$/, "")}
+                    language={match[1]}
+                    style={vscodeHighlightStyle}
+                  />
+                </div>
               ) : (
                 <code {...rest} className={className}>
                   {children}
