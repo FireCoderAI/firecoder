@@ -1,6 +1,6 @@
 import type { WebviewApi } from "vscode-webview";
 import { randomId } from "./messageId";
-import { ChatMessage } from "../hooks/useChat";
+import { Chat, ChatMessage } from "../hooks/useChat";
 import { Transform } from "./transformCallback2AsyncGenerator";
 
 export type MessageType =
@@ -27,13 +27,13 @@ type MessageToExtention =
       id: string;
     }
   | {
-      type: "get-chat-history";
+      type: "get-chat";
       chatId: string;
     }
   | {
-      type: "save-chat-history";
+      type: "save-chat";
       chatId: string;
-      data: ChatMessage[];
+      data: Chat;
     }
   | {
       type: "get-chats";
@@ -119,11 +119,11 @@ class VSCodeAPIWrapper {
     return transform.stream();
   }
 
-  public getChatHistory(chatId: string) {
-    return new Promise<ChatMessage[] | null>((resolve) => {
+  public getChat(chatId: string) {
+    return new Promise<Chat | null>((resolve) => {
       this.postMessageCallback(
         {
-          type: "get-chat-history",
+          type: "get-chat",
           chatId: chatId,
         },
         (message) => {
@@ -133,11 +133,11 @@ class VSCodeAPIWrapper {
     });
   }
 
-  public saveChatHistory(chatId: string, history: ChatMessage[]) {
+  public saveChatHistory(chatId: string, history: Chat) {
     return new Promise<void>((resolve) => {
       this.postMessageCallback(
         {
-          type: "save-chat-history",
+          type: "save-chat",
           chatId: chatId,
           data: history,
         },
@@ -149,7 +149,7 @@ class VSCodeAPIWrapper {
   }
 
   public getChats() {
-    return new Promise<ChatMessage[][]>((resolve) => {
+    return new Promise<Chat[]>((resolve) => {
       this.postMessageCallback({
         type: "get-chats",
       });

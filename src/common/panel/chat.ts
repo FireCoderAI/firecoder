@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 import { getUri } from "../utils/getUri";
 import { getNonce } from "../utils/getNonce";
 import { chat } from "../chat";
-import { ChatMessage } from "../prompt/promptChat";
+import { Chat, ChatMessage } from "../prompt/promptChat";
 import { state } from "../utils/state";
 
 export type MessageType =
@@ -20,10 +20,9 @@ export type MessageType =
       data: any;
     };
 
-type MessageFromWebview =
+type MessageToExtention =
   | {
       type: "send-message";
-      id: string;
       data: ChatMessage[];
     }
   | {
@@ -31,20 +30,21 @@ type MessageFromWebview =
       id: string;
     }
   | {
-      type: "get-chat-history";
-      id: string;
+      type: "get-chat";
       chatId: string;
     }
   | {
-      type: "save-chat-history";
-      id: string;
+      type: "save-chat";
       chatId: string;
-      data: ChatMessage[];
+      data: Chat;
     }
   | {
       type: "get-chats";
-      id: string;
     };
+
+type MessageFromWebview = MessageToExtention & {
+  id: string;
+};
 
 export class ChatPanel implements vscode.WebviewViewProvider {
   private disposables: Disposable[] = [];
@@ -137,14 +137,14 @@ export class ChatPanel implements vscode.WebviewViewProvider {
               chatMessage: message.data,
             });
             break;
-          case "get-chat-history":
-            await this.handleGetChatHistory({
+          case "get-chat":
+            await this.handleGetChat({
               id: message.id,
               chatId: message.chatId,
             });
             break;
-          case "save-chat-history":
-            await this.handleSaveChatHistory({
+          case "save-chat":
+            await this.handleSaveChat({
               id: message.id,
               chatId: message.chatId,
               history: message.data,
@@ -195,17 +195,8 @@ export class ChatPanel implements vscode.WebviewViewProvider {
     sendResponse("", true);
   }
 
-  private async handleGetChatHistory({
-    chatId,
-    id,
-  }: {
-    chatId: string;
-    id: string;
-  }) {
-    const sendResponse = (
-      messageToResponse: ChatMessage[] | null,
-      done: boolean
-    ) => {
+  private async handleGetChat({ chatId, id }: { chatId: string; id: string }) {
+    const sendResponse = (messageToResponse: Chat | null, done: boolean) => {
       this.postMessage({
         type: "e2w-response",
         id: id,
@@ -222,13 +213,13 @@ export class ChatPanel implements vscode.WebviewViewProvider {
     }
   }
 
-  private async handleSaveChatHistory({
+  private async handleSaveChat({
     chatId,
     history,
     id,
   }: {
     chatId: string;
-    history: ChatMessage[];
+    history: Chat;
     id: string;
   }) {
     await state.global.update(`chat-${chatId}`, history);

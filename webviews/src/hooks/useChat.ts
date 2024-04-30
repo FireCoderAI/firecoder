@@ -9,6 +9,13 @@ export type ChatMessage = {
   chatMessageId: string;
 };
 
+export type Chat = {
+  messages: ChatMessage[];
+  chatId: string;
+  date: number;
+  title: string;
+};
+
 export const useChat = (chatId?: string) => {
   const { chatMessages, setChatMessages } = useChatMessages();
 
@@ -21,9 +28,9 @@ export const useChat = (chatId?: string) => {
   useEffect(() => {
     const getChatHistory = async () => {
       if (chatId) {
-        const history = await vscode.getChatHistory(chatId);
-        if (history) {
-          setChatMessages(history);
+        const chat = await vscode.getChat(chatId);
+        if (chat) {
+          setChatMessages(chat.messages);
         }
       }
     };
@@ -58,7 +65,13 @@ export const useChat = (chatId?: string) => {
     }
     setChatMessages((chatHistoryLocal) => {
       (async () => {
-        await vscode.saveChatHistory(chatIdLocal, chatHistoryLocal);
+        const chat = {
+          chatId: chatIdLocal,
+          date: Date.now(),
+          messages: chatHistoryLocal,
+          title: "Chat with AI",
+        } satisfies Chat;
+        await vscode.saveChatHistory(chatIdLocal, chat);
       })();
       return chatHistoryLocal;
     });

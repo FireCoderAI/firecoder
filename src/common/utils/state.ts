@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import type { Spec } from "../download";
-import { ChatMessage } from "../prompt/promptChat";
+import { Chat } from "../prompt/promptChat";
 
 const StateValues = {
   inlineSuggestModeAuto: true,
@@ -9,7 +9,7 @@ const StateValues = {
 type StateValuesType = {
   inlineSuggestModeAuto: boolean;
   serverSpec: Spec | null;
-  [key: `chat-${string}`]: ChatMessage[] | undefined;
+  [key: `chat-${string}`]: Chat | undefined;
 };
 
 class State {
@@ -34,14 +34,14 @@ class State {
     await this.state?.update(key, value);
   }
 
-  public getChats(): ChatMessage[][] {
+  public getChats(): Chat[] {
     const allKeys = (this.state?.keys() ||
       []) as unknown as (keyof StateValuesType)[];
 
     return allKeys
       .filter((key) => key.startsWith("chat-"))
       .map((key) => {
-        return this.get(key as `chat-${string}`) as ChatMessage[];
+        return this.get(key as `chat-${string}`) as Chat;
       });
   }
 }
