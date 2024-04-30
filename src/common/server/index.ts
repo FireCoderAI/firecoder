@@ -233,12 +233,9 @@ class Server {
       const osplatform = os.platform();
       const osmachine = os.machine();
       const isMacArm64 = osplatform === "darwin" && osmachine === "arm64";
-      const res = await fetch(
-        `${this.serverUrl}/${isMacArm64 ? "model.json" : "health"}`,
-        {
-          method: "GET",
-        }
-      );
+      const res = await fetch(`${this.serverUrl}/${"health"}`, {
+        method: "GET",
+      });
       if (res.ok) {
         if (isMacArm64) {
           this.status = "started";
