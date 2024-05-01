@@ -132,6 +132,7 @@ class Server {
       ],
       {
         detached: false,
+        shell: true,
       }
     );
 
@@ -191,6 +192,7 @@ class Server {
     this.serverProcess.on("close", (code) => {
       Logger.trace(`child process exited with code ${code}`, {
         component: "llama",
+        sendTelemetry: true,
       });
     });
 
@@ -233,7 +235,7 @@ class Server {
       const osplatform = os.platform();
       const osmachine = os.machine();
       const isMacArm64 = osplatform === "darwin" && osmachine === "arm64";
-      const res = await fetch(`${this.serverUrl}/${"health"}`, {
+      const res = await fetch(`${this.serverUrl}/health`, {
         method: "GET",
       });
       if (res.ok) {

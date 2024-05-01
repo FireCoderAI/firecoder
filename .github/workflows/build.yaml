@@ -312,11 +312,11 @@ jobs:
                 },
                 "arm64": {
                   cpu: {
-                    checksum: "51ce309f4f5d055fd226a154784812fce10396ad8f8b3478b94fff24569a5063",
+                    checksum: "02be1bb313324e5f5d198acec61a68059f1694d4d13189ef52e9a3b427087ccb",
                     url: "https://s3.firecoder.cc/macOS-arm64",
                   },
                   metal: {
-                    checksum: "51ce309f4f5d055fd226a154784812fce10396ad8f8b3478b94fff24569a5063",
+                    checksum: "02be1bb313324e5f5d198acec61a68059f1694d4d13189ef52e9a3b427087ccb",
                     url: "https://s3.firecoder.cc/macOS-arm64-metal"
                   },
                 }
