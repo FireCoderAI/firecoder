@@ -44,6 +44,20 @@ class State {
         return this.get(key as `chat-${string}`) as Chat;
       });
   }
+  public async delete<T extends keyof StateValuesType>(key: T) {
+    await this.state?.update(key, undefined);
+  }
+
+  public async deleteChats() {
+    const allKeys = (this.state?.keys() ||
+      []) as unknown as (keyof StateValuesType)[];
+
+    await Promise.all(
+      allKeys
+        .filter((key) => key.startsWith("chat-"))
+        .map((key) => this.delete(key as `chat-${string}`))
+    );
+  }
 }
 
 export const state = {

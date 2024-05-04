@@ -40,6 +40,13 @@ type MessageToExtention =
     }
   | {
       type: "get-chats";
+    }
+  | {
+      type: "delete-chat";
+      chatId: string;
+    }
+  | {
+      type: "delete-chats";
     };
 
 type MessageFromWebview = MessageToExtention & {
@@ -150,6 +157,17 @@ export class ChatPanel implements vscode.WebviewViewProvider {
               history: message.data,
             });
             break;
+          case "delete-chat":
+            await this.handleDeleteChat({
+              id: message.id,
+              chatId: message.chatId,
+            });
+            break;
+          case "delete-chats":
+            await this.handleDeleteChats({
+              id: message.id,
+            });
+            break;
           case "get-chats":
             await this.handleGetChats({
               id: message.id,
@@ -223,6 +241,32 @@ export class ChatPanel implements vscode.WebviewViewProvider {
     id: string;
   }) {
     await state.global.update(`chat-${chatId}`, history);
+    await this.postMessage({
+      type: "e2w-response",
+      id: id,
+      data: "",
+      done: true,
+    });
+  }
+
+  private async handleDeleteChat({
+    chatId,
+    id,
+  }: {
+    chatId: string;
+    id: string;
+  }) {
+    await state.global.delete(`chat-${chatId}`);
+    await this.postMessage({
+      type: "e2w-response",
+      id: id,
+      data: "",
+      done: true,
+    });
+  }
+
+  private async handleDeleteChats({ id }: { id: string }) {
+    await state.global.deleteChats();
     await this.postMessage({
       type: "e2w-response",
       id: id,

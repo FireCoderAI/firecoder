@@ -1,4 +1,4 @@
-import { ChatMessage } from "../ChatMessage";
+import { ChatMessage } from "../chat-message";
 
 const ChatHelloMessageContent = `
 Hello! I'm FireCoder, your friendly AI assistant.\n

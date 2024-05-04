@@ -1,15 +1,16 @@
+import { useNavigate, useParams } from "react-router-dom";
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
-import "./App.css";
-import { ChatMessage } from "./components/ChatMessage";
-import { ChatHelloMessage } from "./components/ChatHelloMessage";
-import { AutoScrollDown } from "./components/AutoScrollDown";
-import { useMessageListener } from "./hooks/messageListener";
-import TextArea from "./components/TextArea";
-import { useChat } from "./hooks/useChat";
-import { useEffect } from "react";
-import { vscode } from "./utilities/vscode";
+import { ChatMessage } from "../../components/chat-message";
+import { ChatHelloMessage } from "../../components/chat-hello-message";
+import { AutoScrollDown } from "../../components/auto-scroll-down";
+import { useMessageListener } from "../../hooks/messageListener";
+import TextArea from "../../components/text-area";
+import { useChat } from "../../hooks/useChat";
+import styles from "./style.module.css";
 
-export const App = () => {
+export const ChatInstance = () => {
+  let { chatId } = useParams() as { chatId?: string };
+
   const {
     handleSubmit,
     isLoading,
@@ -18,23 +19,22 @@ export const App = () => {
     setInput,
     startNewChat,
     stop,
-  } = useChat();
+  } = useChat(chatId === "new-chat" ? undefined : chatId);
 
   useMessageListener("start-new-chat", () => {
     startNewChat();
   });
 
-  useEffect(() => {
-    const getChats = async () => {
-      const chats = await vscode.getChats();
-      console.log(chats);
-    };
-    getChats();
-  }, []);
+  const navigate = useNavigate();
 
   return (
-    <main>
-      <div className="chat-history">
+    <div className={styles.chatRoot}>
+      <div className={styles.chatBlockNavigation}>
+        <VSCodeButton appearance="icon" onClick={() => navigate("/chats")}>
+          <span className={"codicon codicon-arrow-left"}></span>
+        </VSCodeButton>
+      </div>
+      <div className={styles.chatHistory}>
         <ChatHelloMessage />
         {chatMessages.map((message) => (
           <ChatMessage
@@ -45,13 +45,13 @@ export const App = () => {
         ))}
         <AutoScrollDown chatMessages={chatMessages} />
       </div>
-      <div className="chat-input-block">
+      <div className={styles.chatInputBlock}>
         <div
-          className="progress-container"
+          className={styles.progressContainer}
           role="progressbar"
           style={{ display: isLoading ? "block" : "none" }}
         >
-          <div className="progress-bit"></div>
+          <div className={styles.progressBit}></div>
         </div>
         <TextArea
           value={input}
@@ -71,6 +71,6 @@ export const App = () => {
           }
         ></TextArea>
       </div>
-    </main>
+    </div>
   );
 };

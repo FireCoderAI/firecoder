@@ -6,6 +6,9 @@ export const useMessageListener = (
   callback: (message: any) => void
 ) => {
   useEffect(() => {
-    vscode.addMessageListener(command, callback);
-  });
+    const removeCallback = vscode.addMessageListener(command, callback);
+    return () => {
+      removeCallback();
+    };
+  }, [command]);
 };

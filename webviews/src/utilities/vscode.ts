@@ -37,11 +37,21 @@ type MessageToExtention =
     }
   | {
       type: "get-chats";
+    }
+  | {
+      type: "delete-chat";
+      chatId: string;
+    }
+  | {
+      type: "delete-chats";
     };
 
 class VSCodeAPIWrapper {
   private readonly vsCodeApi: WebviewApi<unknown> | undefined;
-  private messageCallback: Record<string, any> = {};
+  private messageCallback: Record<
+    string,
+    Record<string, (...messages: any) => any>
+  > = {};
 
   constructor() {
     if (typeof acquireVsCodeApi === "function") {
@@ -50,11 +60,22 @@ class VSCodeAPIWrapper {
     window.addEventListener("message", (message) => {
       const newMessage = (message as MessageEvent<MessageType>).data;
 
+      const callCallbacks = (commandOrMessageId: string, message: any) => {
+        if (commandOrMessageId in this.messageCallback) {
+          const callbacks = Object.values(
+            this.messageCallback[commandOrMessageId]
+          );
+          callbacks.forEach((callback) => {
+            callback(newMessage);
+          });
+        }
+      };
+
       if (
         newMessage.type === "e2w-response" &&
         newMessage.id in this.messageCallback
       ) {
-        this.messageCallback[newMessage.id](newMessage);
+        callCallbacks(newMessage.id, newMessage);
         return;
       }
 
@@ -62,7 +83,7 @@ class VSCodeAPIWrapper {
         newMessage.type === "e2w" &&
         newMessage.command in this.messageCallback
       ) {
-        this.messageCallback[newMessage.command](newMessage);
+        callCallbacks(newMessage.command, newMessage);
         return;
       }
     });
@@ -150,9 +171,41 @@ class VSCodeAPIWrapper {
 
   public getChats() {
     return new Promise<Chat[]>((resolve) => {
-      this.postMessageCallback({
-        type: "get-chats",
-      });
+      this.postMessageCallback(
+        {
+          type: "get-chats",
+        },
+        (message) => {
+          resolve(message.data);
+        }
+      );
+    });
+  }
+
+  public deleteChat(chatId: string) {
+    return new Promise<void>((resolve) => {
+      this.postMessageCallback(
+        {
+          type: "delete-chat",
+          chatId: chatId,
+        },
+        (message) => {
+          resolve(message.data);
+        }
+      );
+    });
+  }
+
+  public deleteChats() {
+    return new Promise<void>((resolve) => {
+      this.postMessageCallback(
+        {
+          type: "delete-chats",
+        },
+        (message) => {
+          resolve(message.data);
+        }
+      );
     });
   }
 
@@ -160,7 +213,20 @@ class VSCodeAPIWrapper {
     commandOrMessageId: string,
     callback: (message: any) => void
   ) {
-    this.messageCallback[commandOrMessageId] = callback;
+    const callbackId = randomId();
+    if (commandOrMessageId in this.messageCallback) {
+      this.messageCallback[commandOrMessageId][callbackId] = callback;
+    } else {
+      this.messageCallback[commandOrMessageId] = {
+        [callbackId]: callback,
+      };
+    }
+    // remove callback on dispose
+    return () => {
+      if (commandOrMessageId in this.messageCallback) {
+        delete this.messageCallback[commandOrMessageId][callbackId];
+      }
+    };
   }
 
   private abortOperation() {

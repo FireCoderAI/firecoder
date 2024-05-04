@@ -1,23 +1,26 @@
-main {
+.chatRoot {
+  display: grid;
+  grid-template-rows: min-content 1fr min-content;
+  height: 100%;
+  grid-template-columns: 100%;
+}
+
+.chatBlockNavigation {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: flex-start;
-  height: 100vh;
+  justify-content: flex-start;
+  align-items: center;
+  padding-left: 16px;
+  padding-top: 6px;
 }
 
-body {
-  padding: 0px;
-}
-
-.chat-history {
+.chatHistory {
   width: 100%;
   overflow: auto;
   display: flex;
   flex-direction: column;
 }
 
-.chat-input-block {
+.chatInputBlock {
   display: flex;
   flex-direction: column;
   width: calc(100% - 40px);
@@ -26,17 +29,17 @@ body {
   padding: 20px 20px 20px 20px;
 }
 
-.chat-input {
+.chatInput {
   flex-grow: 2;
   padding-right: 20px;
 }
 
-.progress-container {
+.progressContainer {
   height: 1px;
   width: calc(100% - 20px);
 }
 
-.progress-container .progress-bit {
+.progressBit {
   height: 1px;
   top: 1px;
   position: relative;
