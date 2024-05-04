@@ -1,0 +1,12 @@
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  padding: 0px;
+}
+
+#root {
+  height: 100%;
+}

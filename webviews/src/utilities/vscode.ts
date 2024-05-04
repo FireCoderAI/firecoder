@@ -1,6 +1,6 @@
 import type { WebviewApi } from "vscode-webview";
-import { randomMessageId } from "./messageId";
-import { ChatMessage } from "../hooks/useChat";
+import { randomId } from "./messageId";
+import { Chat, ChatMessage } from "../hooks/useChat";
 import { Transform } from "./transformCallback2AsyncGenerator";
 
 export type MessageType =
@@ -12,15 +12,46 @@ export type MessageType =
     }
   | {
       type: "e2w-response";
-      command: string;
       id: string;
       done: boolean;
       data: any;
     };
 
+type MessageToExtention =
+  | {
+      type: "send-message";
+      data: ChatMessage[];
+    }
+  | {
+      type: "abort-generate";
+      id: string;
+    }
+  | {
+      type: "get-chat";
+      chatId: string;
+    }
+  | {
+      type: "save-chat";
+      chatId: string;
+      data: Chat;
+    }
+  | {
+      type: "get-chats";
+    }
+  | {
+      type: "delete-chat";
+      chatId: string;
+    }
+  | {
+      type: "delete-chats";
+    };
+
 class VSCodeAPIWrapper {
   private readonly vsCodeApi: WebviewApi<unknown> | undefined;
-  private messageCallback: Record<string, any> = {};
+  private messageCallback: Record<
+    string,
+    Record<string, (...messages: any) => any>
+  > = {};
 
   constructor() {
     if (typeof acquireVsCodeApi === "function") {
@@ -29,11 +60,22 @@ class VSCodeAPIWrapper {
     window.addEventListener("message", (message) => {
       const newMessage = (message as MessageEvent<MessageType>).data;
 
+      const callCallbacks = (commandOrMessageId: string, message: any) => {
+        if (commandOrMessageId in this.messageCallback) {
+          const callbacks = Object.values(
+            this.messageCallback[commandOrMessageId]
+          );
+          callbacks.forEach((callback) => {
+            callback(newMessage);
+          });
+        }
+      };
+
       if (
         newMessage.type === "e2w-response" &&
         newMessage.id in this.messageCallback
       ) {
-        this.messageCallback[newMessage.id](newMessage);
+        callCallbacks(newMessage.id, newMessage);
         return;
       }
 
@@ -41,30 +83,30 @@ class VSCodeAPIWrapper {
         newMessage.type === "e2w" &&
         newMessage.command in this.messageCallback
       ) {
-        this.messageCallback[newMessage.command](newMessage);
+        callCallbacks(newMessage.command, newMessage);
         return;
       }
     });
   }
 
   public postMessageCallback(
-    message: { type: string; data: any },
+    message: MessageToExtention,
     messageCallback?: (message: any) => void,
     config?: { signal?: AbortSignal }
   ) {
     if (this.vsCodeApi) {
-      const messageId = randomMessageId();
+      const id = randomId();
       if (messageCallback) {
-        this.addMessageListener(messageId, messageCallback);
+        this.addMessageListener(id, messageCallback);
       }
 
       config?.signal?.addEventListener("abort", () => {
-        this.abortOperation(messageId);
+        this.abortOperation();
       });
 
       this.vsCodeApi.postMessage({
         ...message,
-        messageId,
+        id,
       });
     } else {
       console.log(message);
@@ -81,7 +123,7 @@ class VSCodeAPIWrapper {
     this.postMessageCallback(
       {
         data: chatHistory,
-        type: "sendMessage",
+        type: "send-message",
       },
       (message) => {
         if (message.done) {
@@ -98,17 +140,98 @@ class VSCodeAPIWrapper {
     return transform.stream();
   }
 
+  public getChat(chatId: string) {
+    return new Promise<Chat | null>((resolve) => {
+      this.postMessageCallback(
+        {
+          type: "get-chat",
+          chatId: chatId,
+        },
+        (message) => {
+          resolve(message.data);
+        }
+      );
+    });
+  }
+
+  public saveChatHistory(chatId: string, history: Chat) {
+    return new Promise<void>((resolve) => {
+      this.postMessageCallback(
+        {
+          type: "save-chat",
+          chatId: chatId,
+          data: history,
+        },
+        (message) => {
+          resolve(message.data);
+        }
+      );
+    });
+  }
+
+  public getChats() {
+    return new Promise<Chat[]>((resolve) => {
+      this.postMessageCallback(
+        {
+          type: "get-chats",
+        },
+        (message) => {
+          resolve(message.data);
+        }
+      );
+    });
+  }
+
+  public deleteChat(chatId: string) {
+    return new Promise<void>((resolve) => {
+      this.postMessageCallback(
+        {
+          type: "delete-chat",
+          chatId: chatId,
+        },
+        (message) => {
+          resolve(message.data);
+        }
+      );
+    });
+  }
+
+  public deleteChats() {
+    return new Promise<void>((resolve) => {
+      this.postMessageCallback(
+        {
+          type: "delete-chats",
+        },
+        (message) => {
+          resolve(message.data);
+        }
+      );
+    });
+  }
+
   public addMessageListener(
     commandOrMessageId: string,
     callback: (message: any) => void
   ) {
-    this.messageCallback[commandOrMessageId] = callback;
+    const callbackId = randomId();
+    if (commandOrMessageId in this.messageCallback) {
+      this.messageCallback[commandOrMessageId][callbackId] = callback;
+    } else {
+      this.messageCallback[commandOrMessageId] = {
+        [callbackId]: callback,
+      };
+    }
+    // remove callback on dispose
+    return () => {
+      if (commandOrMessageId in this.messageCallback) {
+        delete this.messageCallback[commandOrMessageId][callbackId];
+      }
+    };
   }
 
-  private abortOperation(messageId: string) {
+  private abortOperation() {
     this.vsCodeApi?.postMessage({
       type: "abort-generate",
-      id: messageId,
     });
   }
 }

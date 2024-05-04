@@ -1,6 +1,7 @@
-import { useCallback, useRef, useState } from "react";
-import { randomMessageId } from "../utilities/messageId";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { randomId } from "../utilities/messageId";
 import { vscode } from "../utilities/vscode";
+import { useChatMessages } from "./useChatMessages";
 
 export type ChatMessage = {
   role: string;
@@ -8,16 +9,38 @@ export type ChatMessage = {
   chatMessageId: string;
 };
 
-export const useChat = () => {
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+export type Chat = {
+  messages: ChatMessage[];
+  chatId: string;
+  date: number;
+  title: string;
+};
+
+export const useChat = (chatId?: string) => {
+  const { chatMessages, setChatMessages } = useChatMessages();
 
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [chatIdLocal, setChatIdLocal] = useState<string>(chatId || randomId());
 
   const abortController = useRef(new AbortController());
 
+  useEffect(() => {
+    const getChatHistory = async () => {
+      if (chatId) {
+        const chat = await vscode.getChat(chatId);
+        if (chat) {
+          setChatMessages(chat.messages);
+        }
+      }
+    };
+    if (chatId) {
+      getChatHistory();
+    }
+  }, [chatId, setChatMessages]);
+
   const sendMessage = async (chatHistoryLocal: ChatMessage[]) => {
-    const messageId = randomMessageId();
+    const messageId = randomId();
     for await (const newMessage of vscode.startGeneration(chatHistoryLocal, {
       signal: abortController.current.signal,
     })) {
@@ -40,6 +63,18 @@ export const useChat = () => {
         ];
       });
     }
+    setChatMessages((chatHistoryLocal) => {
+      (async () => {
+        const chat = {
+          chatId: chatIdLocal,
+          date: Date.now(),
+          messages: chatHistoryLocal,
+          title: "Chat with AI",
+        } satisfies Chat;
+        await vscode.saveChatHistory(chatIdLocal, chat);
+      })();
+      return chatHistoryLocal;
+    });
     setIsLoading(false);
   };
 
@@ -55,7 +90,7 @@ export const useChat = () => {
     }
 
     setChatMessages((value) => {
-      const messageId = randomMessageId();
+      const messageId = randomId();
 
       const newChatMessage = [
         ...value,
@@ -80,7 +115,7 @@ export const useChat = () => {
 
   const startNewChat = useCallback(() => {
     setChatMessages([]);
-  }, []);
+  }, [setChatMessages]);
 
   return {
     chatMessages,

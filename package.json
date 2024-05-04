@@ -36,7 +36,8 @@
       "view/title": [
         {
           "command": "firecoder.startNewChat",
-          "group": "navigation@1"
+          "group": "navigation",
+          "when": "view === firecoder.chat-gui"
         }
       ]
     },

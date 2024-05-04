@@ -3,7 +3,8 @@ import * as vscode from "vscode";
 import { getUri } from "../utils/getUri";
 import { getNonce } from "../utils/getNonce";
 import { chat } from "../chat";
-import { ChatMessage } from "../prompt/promptChat";
+import { Chat, ChatMessage } from "../prompt/promptChat";
+import { state } from "../utils/state";
 
 export type MessageType =
   | {
@@ -15,10 +16,42 @@ export type MessageType =
   | {
       type: "e2w-response";
       id: string;
-      command: string;
       done: boolean;
       data: any;
     };
+
+type MessageToExtention =
+  | {
+      type: "send-message";
+      data: ChatMessage[];
+    }
+  | {
+      type: "abort-generate";
+      id: string;
+    }
+  | {
+      type: "get-chat";
+      chatId: string;
+    }
+  | {
+      type: "save-chat";
+      chatId: string;
+      data: Chat;
+    }
+  | {
+      type: "get-chats";
+    }
+  | {
+      type: "delete-chat";
+      chatId: string;
+    }
+  | {
+      type: "delete-chats";
+    };
+
+type MessageFromWebview = MessageToExtention & {
+  id: string;
+};
 
 export class ChatPanel implements vscode.WebviewViewProvider {
   private disposables: Disposable[] = [];
@@ -50,6 +83,7 @@ export class ChatPanel implements vscode.WebviewViewProvider {
       "css",
       "main.css",
     ]);
+
     const scriptUri = getUri(webview, extensionUri, [
       "webviews",
       "build",
@@ -95,21 +129,52 @@ export class ChatPanel implements vscode.WebviewViewProvider {
 
   private setWebviewMessageListener(webview: Webview) {
     webview.onDidReceiveMessage(
-      async (message: any) => {
+      async (message: MessageFromWebview) => {
         if (message.type in this.messageCallback) {
           this.messageCallback[message.type]();
           return;
         }
+
         const type = message.type;
 
         switch (type) {
-          case "sendMessage":
+          case "send-message":
             await this.handleStartGeneration({
+              id: message.id,
               chatMessage: message.data,
-              messageId: message.messageId,
-              messageType: message.type,
             });
-            return;
+            break;
+          case "get-chat":
+            await this.handleGetChat({
+              id: message.id,
+              chatId: message.chatId,
+            });
+            break;
+          case "save-chat":
+            await this.handleSaveChat({
+              id: message.id,
+              chatId: message.chatId,
+              history: message.data,
+            });
+            break;
+          case "delete-chat":
+            await this.handleDeleteChat({
+              id: message.id,
+              chatId: message.chatId,
+            });
+            break;
+          case "delete-chats":
+            await this.handleDeleteChats({
+              id: message.id,
+            });
+            break;
+          case "get-chats":
+            await this.handleGetChats({
+              id: message.id,
+            });
+            break;
+          default:
+            break;
         }
       },
       undefined,
@@ -117,27 +182,17 @@ export class ChatPanel implements vscode.WebviewViewProvider {
     );
   }
 
-  private addMessageListener(
-    commandOrMessageId: string,
-    callback: (message: any) => void
-  ) {
-    this.messageCallback[commandOrMessageId] = callback;
-  }
-
   private async handleStartGeneration({
-    messageId,
-    messageType,
+    id,
     chatMessage,
   }: {
-    messageId: string;
-    messageType: string;
+    id: string;
     chatMessage: ChatMessage[];
   }) {
-    const sendResponse = (messageToResponse: any, done: boolean) => {
+    const sendResponse = (messageToResponse: string, done: boolean) => {
       this.postMessage({
         type: "e2w-response",
-        id: messageId,
-        command: messageType,
+        id: id,
         data: messageToResponse,
         done: done,
       });
@@ -158,8 +213,91 @@ export class ChatPanel implements vscode.WebviewViewProvider {
     sendResponse("", true);
   }
 
+  private async handleGetChat({ chatId, id }: { chatId: string; id: string }) {
+    const sendResponse = (messageToResponse: Chat | null, done: boolean) => {
+      this.postMessage({
+        type: "e2w-response",
+        id: id,
+        data: messageToResponse,
+        done: done,
+      });
+    };
+
+    const history = state.global.get(`chat-${chatId}`);
+    if (history) {
+      sendResponse(history, true);
+    } else {
+      sendResponse(null, true);
+    }
+  }
+
+  private async handleSaveChat({
+    chatId,
+    history,
+    id,
+  }: {
+    chatId: string;
+    history: Chat;
+    id: string;
+  }) {
+    await state.global.update(`chat-${chatId}`, history);
+    await this.postMessage({
+      type: "e2w-response",
+      id: id,
+      data: "",
+      done: true,
+    });
+  }
+
+  private async handleDeleteChat({
+    chatId,
+    id,
+  }: {
+    chatId: string;
+    id: string;
+  }) {
+    await state.global.delete(`chat-${chatId}`);
+    await this.postMessage({
+      type: "e2w-response",
+      id: id,
+      data: "",
+      done: true,
+    });
+  }
+
+  private async handleDeleteChats({ id }: { id: string }) {
+    await state.global.deleteChats();
+    await this.postMessage({
+      type: "e2w-response",
+      id: id,
+      data: "",
+      done: true,
+    });
+  }
+
+  private async handleGetChats({ id }: { id: string }) {
+    const chats = state.global.getChats();
+    await this.postMessage({
+      type: "e2w-response",
+      id: id,
+      data: chats,
+      done: true,
+    });
+  }
+
+  private addMessageListener(
+    commandOrMessageId: string,
+    callback: (message: any) => void
+  ) {
+    this.messageCallback[commandOrMessageId] = callback;
+  }
+
+  private async postMessage(message: MessageType) {
+    await this.webview?.postMessage(message);
+  }
+
   public async sendMessageToWebview(
-    command: MessageType["command"],
+    command: string,
     data: MessageType["data"]
   ) {
     const message: MessageType = {
@@ -169,9 +307,5 @@ export class ChatPanel implements vscode.WebviewViewProvider {
       done: true,
     };
     await this.postMessage(message);
-  }
-
-  private async postMessage(message: MessageType) {
-    await this.webview?.postMessage(message);
   }
 }
