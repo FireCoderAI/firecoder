@@ -153,12 +153,22 @@
         "firecoder.cloud.endpoint": {
           "type": "string",
           "default": "https://llm-api.firecoder.cc/v1",
-          "description": ""
+          "description": "Endpoint to cloud."
         },
         "firecoder.cloud.use": {
           "type": "boolean",
           "default": false,
-          "description": ""
+          "description": "Enable cloud feature. User should provide their own credentials by login. Enable this to use cloud features."
+        },
+        "firecoder.cloud.use.autocomplete": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable cloud autocomplete feature. Please enable cloud feature to use this feature."
+        },
+        "firecoder.cloud.use.chat": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable cloud chat feature. Please enable cloud feature to use this feature."
         },
         "firecoder.server.usePreRelease": {
           "type": "boolean",

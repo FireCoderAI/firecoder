@@ -107,22 +107,27 @@ export async function activate(context: vscode.ExtensionContext) {
       event.affectsConfiguration(
         "firecoder.experimental.useGpu.windows.nvidia"
       ) ||
-      event.affectsConfiguration("firecoder.server.usePreRelease")
+      event.affectsConfiguration("firecoder.server.usePreRelease") ||
+      event.affectsConfiguration("firecoder.cloud.use.chat") ||
+      event.affectsConfiguration("firecoder.cloud.use.autocomplete")
     ) {
       Object.values(servers).forEach((server) => server.stopServer());
 
-      const completionServers = configuration.get("cloud.use")
-        ? []
-        : new Set([
-            configuration.get("completion.autoMode"),
-            configuration.get("completion.manuallyMode"),
-          ]);
+      const completionServers =
+        configuration.get("cloud.use") &&
+        configuration.get("cloud.use.autocomplete")
+          ? []
+          : new Set([
+              configuration.get("completion.autoMode"),
+              configuration.get("completion.manuallyMode"),
+            ]);
       const serversToStart = [
         ...completionServers,
         ...(configuration.get("experimental.chat") &&
-        !configuration.get("cloud.use")
-          ? ["chat-medium" as const]
-          : []),
+        configuration.get("cloud.use") &&
+        configuration.get("cloud.use.chat")
+          ? []
+          : ["chat-medium" as const]),
       ];
       await Promise.all(
         serversToStart.map((serverType) => servers[serverType].startServer())

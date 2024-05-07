@@ -66,7 +66,7 @@ export async function* chat(
       }
     }
 
-    if (configuration.get("cloud.use")) {
+    if (configuration.get("cloud.use") && configuration.get("cloud.use.chat")) {
       yield* await sendChatRequestCloud(history, parameters);
     } else {
       const prompt = getPromptChat(history);

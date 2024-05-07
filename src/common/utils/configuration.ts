@@ -35,6 +35,12 @@ const ConfigurationProperties = {
   "server.usePreRelease": {
     default: false,
   },
+  "cloud.use.autocomplete": {
+    default: false,
+  },
+  "cloud.use.chat": {
+    default: false,
+  },
 } as const;
 
 interface ConfigurationPropertiesType
@@ -70,6 +76,12 @@ interface ConfigurationPropertiesType
     possibleValues: boolean;
   };
   "server.usePreRelease": {
+    possibleValues: boolean;
+  };
+  "cloud.use.autocomplete": {
+    possibleValues: boolean;
+  };
+  "cloud.use.chat": {
     possibleValues: boolean;
   };
 }

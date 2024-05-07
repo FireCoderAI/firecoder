@@ -73,7 +73,10 @@ export const getInlineCompletionProvider = (
             sendTelemetry: true,
           }
         );
-        if (configuration.get("cloud.use")) {
+        if (
+          configuration.get("cloud.use") &&
+          configuration.get("cloud.use.autocomplete")
+        ) {
           const prompt = await getPromptCompletion({
             activeDocument: document,
             additionalDocuments: await getAdditionalDocuments(),
