@@ -197,7 +197,7 @@ class Server {
     });
 
     const isServerStarted = await this.checkServerStatusIntervalWithTimeout(
-      10000
+      1000000
     );
 
     if (!isServerStarted) {

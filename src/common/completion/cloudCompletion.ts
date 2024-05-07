@@ -1,6 +1,7 @@
 import { OpenAI } from "@langchain/openai";
 import { configuration } from "../utils/configuration";
 import Logger from "../logger";
+import { getSuppabaseClient } from "../auth/supabaseClient";
 
 type Parameters = {
   temperature: number;
@@ -12,7 +13,13 @@ export const sendCompletionsRequestCloud = async (
   prompt: string,
   parameters: Parameters
 ) => {
-  const apiKey = configuration.get("cloud.apiToken");
+  const supabase = getSuppabaseClient();
+  const session = await supabase.auth.getSession();
+  const apiKey = session.data?.session?.access_token;
+
+  if (!apiKey) {
+    throw new Error("No API key found");
+  }
 
   const model = new OpenAI({
     maxRetries: 0,

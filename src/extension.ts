@@ -8,6 +8,9 @@ import { configuration } from "./common/utils/configuration";
 import { state } from "./common/utils/state";
 import { ChatPanel } from "./common/panel/chat";
 import { tokenizer } from "./common/prompt/tokenizer";
+import { login } from "./common/auth";
+import { secretsStorage } from "./common/utils/secretStore";
+import { getSuppabaseClient } from "./common/auth/supabaseClient";
 
 export async function activate(context: vscode.ExtensionContext) {
   FirecoderTelemetrySenderInstance.init(context);
@@ -15,6 +18,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
   state.global.init(context.globalState);
   state.workspace.init(context.workspaceState);
+
+  secretsStorage.init(context.secrets);
 
   Logger.info("FireCoder is starting.", {
     component: "main",
@@ -51,6 +56,35 @@ export async function activate(context: vscode.ExtensionContext) {
       }
     )
   );
+
+  if (configuration.get("cloud.use")) {
+    const supabase = getSuppabaseClient();
+
+    const data = await supabase.auth.getUser();
+    if (data.error) {
+      await login();
+      return;
+    }
+  }
+
+  vscode.workspace.onDidChangeConfiguration(async (event) => {
+    if (event.affectsConfiguration("firecoder.cloud.use")) {
+      const cloudUse = configuration.get("cloud.use");
+      if (cloudUse === true) {
+        const supabase = getSuppabaseClient();
+
+        const data = await supabase.auth.getUser();
+        if (data.error) {
+          await login();
+          return;
+        }
+      } else {
+        const supabase = getSuppabaseClient();
+
+        await supabase.auth.signOut();
+      }
+    }
+  });
 
   context.subscriptions.push(
     vscode.commands.registerCommand("firecoder.inlineSuggest", async () => {

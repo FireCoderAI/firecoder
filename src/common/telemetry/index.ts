@@ -39,6 +39,7 @@ class FirecoderTelemetrySender implements vscode.TelemetrySender {
         transports: [
           new FetchTransport({
             url: "https://faro-collector-prod-eu-west-0.grafana.net/collect/33a834c252bb6b780b5d242def445bbd",
+            bufferSize: 100,
           }),
         ],
         sessionTracking: {
