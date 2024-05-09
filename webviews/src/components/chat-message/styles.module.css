@@ -2,6 +2,16 @@
   padding: 0px 20px;
 }
 
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 8px;
+}
+
+.chat-title {
+  margin: 0;
+}
+
 .code-container {
   position: relative;
 }

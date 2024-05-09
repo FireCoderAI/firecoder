@@ -10,7 +10,19 @@ export const ChatMessage = memo((props: { role: string; content: string }) => {
   return (
     <>
       <div className={styles["chat-message"]}>
-        <h4>{title}</h4>
+        <div className={styles["chat-header"]}>
+          <h4 className={styles["chat-title"]}>{title}</h4>
+          <VSCodeButton
+            appearance="icon"
+            onClick={() =>
+              navigator.clipboard.writeText(
+                String(props.content).replace(/\n$/, "")
+              )
+            }
+          >
+            <span className="codicon codicon-copy"></span>
+          </VSCodeButton>
+        </div>
         <Markdown
           components={{
             code(props) {
