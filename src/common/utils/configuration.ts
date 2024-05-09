@@ -35,10 +35,10 @@ const ConfigurationProperties = {
   "server.usePreRelease": {
     default: false,
   },
-  "cloud.use.autocomplete": {
+  "cloud.autocomplete.use": {
     default: false,
   },
-  "cloud.use.chat": {
+  "cloud.chat.use": {
     default: false,
   },
 } as const;
@@ -78,29 +78,27 @@ interface ConfigurationPropertiesType
   "server.usePreRelease": {
     possibleValues: boolean;
   };
-  "cloud.use.autocomplete": {
+  "cloud.autocomplete.use": {
     possibleValues: boolean;
   };
-  "cloud.use.chat": {
+  "cloud.chat.use": {
     possibleValues: boolean;
   };
 }
 
 class Configuration {
-  private configuration: vscode.WorkspaceConfiguration;
-  constructor() {
-    this.configuration = vscode.workspace.getConfiguration("firecoder");
-  }
+  // private configuration: vscode.WorkspaceConfiguration;
+  // constructor() {
+  //   this.configuration = vscode.workspace.getConfiguration("firecoder");
+  // }
 
   public get<T extends keyof ConfigurationPropertiesType>(
     property: T
   ): ConfigurationPropertiesType[T]["possibleValues"] {
-    this.configuration = vscode.workspace.getConfiguration("firecoder");
+    const configuration = vscode.workspace.getConfiguration("firecoder");
+    const value = configuration.get(property) as any;
 
-    return (
-      this.configuration.get(property) ??
-      ConfigurationProperties[property]["default"]
-    );
+    return value ?? ConfigurationProperties[property]["default"];
   }
 }
 

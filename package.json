@@ -160,15 +160,15 @@
           "default": false,
           "description": "Enable cloud feature. User should provide their own credentials by login. Enable this to use cloud features."
         },
-        "firecoder.cloud.use.autocomplete": {
+        "firecoder.cloud.autocomplete.use": {
           "type": "boolean",
           "default": false,
-          "description": "Enable cloud autocomplete feature. Please enable cloud feature to use this feature."
+          "markdownDescription": "Enable cloud autocomplete feature. Only applies when `#firecoder.cloud.use#` is set to `true`."
         },
-        "firecoder.cloud.use.chat": {
+        "firecoder.cloud.chat.use": {
           "type": "boolean",
           "default": false,
-          "description": "Enable cloud chat feature. Please enable cloud feature to use this feature."
+          "markdownDescription": "Enable cloud chat feature. Only applies when `#firecoder.cloud.use#` is set to `true`."
         },
         "firecoder.server.usePreRelease": {
           "type": "boolean",

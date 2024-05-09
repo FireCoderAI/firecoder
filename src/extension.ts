@@ -115,7 +115,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
       const completionServers =
         configuration.get("cloud.use") &&
-        configuration.get("cloud.use.autocomplete")
+        configuration.get("cloud.autocomplete.use")
           ? []
           : new Set([
               configuration.get("completion.autoMode"),
@@ -125,7 +125,7 @@ export async function activate(context: vscode.ExtensionContext) {
         ...completionServers,
         ...(configuration.get("experimental.chat") &&
         configuration.get("cloud.use") &&
-        configuration.get("cloud.use.chat")
+        configuration.get("cloud.chat.use")
           ? []
           : ["chat-medium" as const]),
       ];
