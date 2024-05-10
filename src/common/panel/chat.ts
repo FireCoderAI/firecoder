@@ -5,6 +5,7 @@ import { getNonce } from "../utils/getNonce";
 import { chat } from "../chat";
 import { Chat, ChatMessage } from "../prompt/promptChat";
 import { state } from "../utils/state";
+import { configuration } from "../utils/configuration";
 
 export type MessageType =
   | {
@@ -28,6 +29,9 @@ type MessageToExtention =
   | {
       type: "abort-generate";
       id: string;
+    }
+  | {
+      type: "get-settings";
     }
   | {
       type: "get-chat";
@@ -173,6 +177,11 @@ export class ChatPanel implements vscode.WebviewViewProvider {
               id: message.id,
             });
             break;
+          case "get-settings":
+            await this.handleGetSettings({
+              id: message.id,
+            });
+            break;
           default:
             break;
         }
@@ -211,6 +220,19 @@ export class ChatPanel implements vscode.WebviewViewProvider {
     }
 
     sendResponse("", true);
+  }
+
+  private async handleGetSettings({ id }: { id: string }) {
+    const enable = configuration.get("experimental.chat");
+
+    await this.postMessage({
+      type: "e2w-response",
+      id: id,
+      data: {
+        chatEnable: enable,
+      },
+      done: true,
+    });
   }
 
   private async handleGetChat({ chatId, id }: { chatId: string; id: string }) {

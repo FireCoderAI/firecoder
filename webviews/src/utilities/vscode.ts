@@ -27,6 +27,9 @@ type MessageToExtention =
       id: string;
     }
   | {
+      type: "get-settings";
+    }
+  | {
       type: "get-chat";
       chatId: string;
     }
@@ -146,6 +149,21 @@ class VSCodeAPIWrapper {
         {
           type: "get-chat",
           chatId: chatId,
+        },
+        (message) => {
+          resolve(message.data);
+        }
+      );
+    });
+  }
+
+  public getSettings() {
+    return new Promise<{
+      chatEnable: boolean;
+    }>((resolve) => {
+      this.postMessageCallback(
+        {
+          type: "get-settings",
         },
         (message) => {
           resolve(message.data);
