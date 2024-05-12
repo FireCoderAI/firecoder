@@ -108,7 +108,7 @@
           "default": false,
           "description": "Use experimental GPU Metal support for macOS."
         },
-        "firecoder.experimental.chat": {
+        "firecoder.local.chat.use": {
           "type": "boolean",
           "default": false,
           "description": "Enable experimental chat feature."

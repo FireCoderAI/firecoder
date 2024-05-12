@@ -11,7 +11,7 @@ const ConfigurationProperties = {
   "experimental.useGpu.osx.metal": {
     default: false,
   },
-  "experimental.chat": {
+  "local.chat.use": {
     default: false,
   },
   "experimental.useopentabs": {
@@ -54,7 +54,7 @@ interface ConfigurationPropertiesType
   "experimental.useGpu.osx.metal": {
     possibleValues: boolean;
   };
-  "experimental.chat": {
+  "local.chat.use": {
     possibleValues: boolean;
   };
   "experimental.useopentabs": {
@@ -69,15 +69,16 @@ interface ConfigurationPropertiesType
   homedir: {
     possibleValues: string;
   };
+  "server.usePreRelease": {
+    possibleValues: boolean;
+  };
   "cloud.endpoint": {
     possibleValues: string;
   };
   "cloud.use": {
     possibleValues: boolean;
   };
-  "server.usePreRelease": {
-    possibleValues: boolean;
-  };
+
   "cloud.autocomplete.use": {
     possibleValues: boolean;
   };

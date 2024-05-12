@@ -95,7 +95,7 @@ export async function activate(context: vscode.ExtensionContext) {
         component: "main",
         sendTelemetry: true,
       });
-    } else if (configuration.get("experimental.chat")) {
+    } else if (configuration.get("local.chat.use")) {
       Logger.info("Use local for chat.", {
         component: "main",
         sendTelemetry: true,
@@ -182,7 +182,7 @@ export async function activate(context: vscode.ExtensionContext) {
       event.affectsConfiguration("firecoder.cloud.use") ||
       event.affectsConfiguration("firecoder.cloud.chat.use") ||
       event.affectsConfiguration("firecoder.cloud.autocomplete.use") ||
-      event.affectsConfiguration("firecoder.experimental.chat") ||
+      event.affectsConfiguration("firecoder.local.chat.use") ||
       event.affectsConfiguration("firecoder.completion.manuallyMode") ||
       event.affectsConfiguration("firecoder.completion.autoMode") ||
       event.affectsConfiguration(

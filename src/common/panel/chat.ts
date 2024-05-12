@@ -252,7 +252,7 @@ export class ChatPanel implements vscode.WebviewViewProvider {
       )
       .some((serverIsWorking) => serverIsWorking);
 
-    const localChatUsing = configuration.get("experimental.chat");
+    const localChatUsing = configuration.get("local.chat.use");
     const supabase = getSuppabaseClient();
     const sesssion = await supabase.auth.getSession();
     const userLoggined = sesssion.data.session ? true : false;
@@ -329,7 +329,7 @@ export class ChatPanel implements vscode.WebviewViewProvider {
   }
 
   private async handleEnableChat({ id }: { id: string }) {
-    await configuration.set("experimental.chat", true);
+    await configuration.set("local.chat.use", true);
     await this.postMessage({
       type: "e2w-response",
       id: id,
