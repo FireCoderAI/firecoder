@@ -257,11 +257,14 @@ export class ChatPanel implements vscode.WebviewViewProvider {
     const sesssion = await supabase.auth.getSession();
     const userLoggined = sesssion.data.session ? true : false;
 
-    const chatEnabled =
-      (localChatUsing && chatServerIsWorking) || (cloudUsing && cloudChatUsing);
+    const chatEnabled = localChatUsing || (cloudUsing && cloudChatUsing);
+    const chatIsWorking =
+      (cloudUsing && cloudChatUsing && userLoggined) ||
+      (chatServerIsWorking && localChatUsing);
 
     return {
       chatEnabled: chatEnabled,
+      chatIsWorking: chatIsWorking,
       userLoggined: userLoggined,
     };
   }
