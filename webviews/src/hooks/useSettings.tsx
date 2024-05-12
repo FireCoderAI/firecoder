@@ -4,6 +4,7 @@ import { vscode } from "../utilities/vscode";
 type ConfigurationType = {
   chatEnabled: boolean;
   userLoggined: boolean;
+  chatIsWorking: boolean;
 };
 
 interface SettingsContextType {
@@ -26,19 +27,21 @@ export const SettingsProvider = ({
       const settings = await vscode.getSettings();
       if (
         settings.chatEnabled !== lastSettings?.chatEnabled ||
+        settings.chatIsWorking !== lastSettings?.chatIsWorking ||
         settings.userLoggined !== lastSettings?.userLoggined
       ) {
         lastSettings = settings;
 
         setConfiguration({
           chatEnabled: settings.chatEnabled,
+          chatIsWorking: settings.chatIsWorking,
           userLoggined: settings.userLoggined,
         });
       }
     };
     getSettings();
 
-    const interval = setInterval(getSettings, 5000);
+    const interval = setInterval(getSettings, 1000);
     return () => {
       clearInterval(interval);
     };

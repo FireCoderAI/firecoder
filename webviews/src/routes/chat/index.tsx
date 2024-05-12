@@ -7,9 +7,10 @@ import { useMessageListener } from "../../hooks/messageListener";
 import TextArea from "../../components/text-area";
 import { useChat } from "../../hooks/useChat";
 import styles from "./style.module.css";
+import { useSettings } from "../../hooks/useSettings";
 
 export const ChatInstance = () => {
-  let { chatId } = useParams() as { chatId?: string };
+  const { chatId } = useParams() as { chatId?: string };
 
   const {
     handleSubmit,
@@ -20,6 +21,8 @@ export const ChatInstance = () => {
     startNewChat,
     stop,
   } = useChat(chatId === "new-chat" ? undefined : chatId);
+
+  const settings = useSettings();
 
   useMessageListener("start-new-chat", () => {
     startNewChat();
@@ -59,15 +62,22 @@ export const ChatInstance = () => {
         <TextArea
           value={input}
           onChange={(value) => setInput(value || "")}
-          onSubmit={handleSubmit}
+          onSubmit={
+            settings.configuration.chatIsWorking ? handleSubmit : () => true
+          }
           buttonEnd={
             <VSCodeButton
               appearance="icon"
+              disabled={!settings.configuration.chatIsWorking}
               onClick={isLoading ? stop : handleSubmit}
             >
               <span
                 className={`codicon ${
-                  isLoading ? "codicon-debug-stop" : "codicon-send"
+                  settings.configuration.chatIsWorking
+                    ? isLoading
+                      ? "codicon-debug-stop"
+                      : "codicon-send"
+                    : "codicon-loading codicon-modifier-spin"
                 }`}
               ></span>
             </VSCodeButton>

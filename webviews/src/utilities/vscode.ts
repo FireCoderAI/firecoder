@@ -163,6 +163,7 @@ class VSCodeAPIWrapper {
   public getSettings() {
     return new Promise<{
       chatEnabled: boolean;
+      chatIsWorking: boolean;
       userLoggined: boolean;
     }>((resolve) => {
       this.postMessageCallback(
