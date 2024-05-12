@@ -23,7 +23,7 @@ export type MessageType =
       data: any;
     };
 
-type MessageToExtention =
+type MessageToExtension =
   | {
       type: "send-message";
       data: ChatMessage[];
@@ -58,7 +58,7 @@ type MessageToExtention =
       type: "delete-chats";
     };
 
-type MessageFromWebview = MessageToExtention & {
+type MessageFromWebview = MessageToExtension & {
   id: string;
 };
 
