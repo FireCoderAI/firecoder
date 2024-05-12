@@ -11,29 +11,22 @@ export type Chat = {
   title: string;
 };
 
-const promptBaseDefault = `You are an AI programming assistant, utilizing the DeepSeek Coder model, developed by DeepSeek Company, and you only answer questions related to computer science. For politically sensitive questions, security and privacy issues, and other non-computer science questions, you will refuse to answer.
-`;
-
 export const getPromptChat = (chatMessages: ChatMessage[]) => {
+  const systemPrompt =
+    chatMessages.find((message) => message.role === "system")?.content || "";
   const promptHistory = chatMessages
     .filter((chatMessage) => chatMessage.role !== "system")
-    .map((chatMessage) => {
+    .map((chatMessage, index) => {
       const partOfPrompt =
-        chatMessage.role === "user" ? "### Instruction:\n" : "### Response:\n";
-      return (
-        partOfPrompt +
-        chatMessage.content +
-        "\n" +
-        (chatMessage.role === "ai" ? "<|EOT|>" : "")
-      );
+        index === 0 && chatMessage.role === "user"
+          ? "<start_of_turn>user\n" + systemPrompt + "\n"
+          : chatMessage.role === "user"
+          ? "<start_of_turn>user\n"
+          : "<start_of_turn>model\n";
+      return partOfPrompt + chatMessage.content + "<end_of_turn>\n";
     })
     .join("");
 
-  const promptBase =
-    chatMessages.find((message) => message.role === "system")?.content ??
-    promptBaseDefault;
-
-  const prompt = promptBase + promptHistory + "### Response:\n";
-
+  const prompt = "<bos>" + promptHistory + "<start_of_turn>model\n";
   return prompt;
 };
