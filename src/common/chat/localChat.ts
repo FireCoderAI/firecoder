@@ -17,7 +17,7 @@ const defualtParameters = {
   temperature: 0.7,
   stop: [],
   repeat_last_n: 256,
-  repeat_penalty: 1.18,
+  repeat_penalty: 1,
   penalize_nl: false,
   top_k: 20,
   top_p: 0.5,
