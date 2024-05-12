@@ -164,20 +164,10 @@ const getModelInfo = async (
       checksum:
         "eb00372705e7d5d30442750e8a7c72919c8e243bee52e1cce97fcfc1008c6143",
     },
-    "chat-small": {
-      url: "https://huggingface.co/TheBloke/deepseek-coder-1.3b-instruct-GGUF/resolve/main/deepseek-coder-1.3b-instruct.Q8_0.gguf",
-      checksum:
-        "36eb025121a50ee6d37fe900659393ff8fb5ea34adc0e3c11fc635e07624dcdb",
-    },
     "chat-medium": {
-      url: "https://huggingface.co/TheBloke/deepseek-coder-6.7B-instruct-GGUF/resolve/main/deepseek-coder-6.7b-instruct.Q8_0.gguf",
+      url: "https://huggingface.co/lmstudio-community/codegemma-1.1-7b-it-GGUF/resolve/main/codegemma-1.1-7b-it-Q5_K_M.gguf",
       checksum:
-        "02cd6ce7ccec670cf6d3dd147932f13e584f9e964d5a3297a74b401b658471ae",
-    },
-    "chat-large": {
-      url: "https://huggingface.co/TheBloke/deepseek-coder-33B-instruct-GGUF/resolve/main/deepseek-coder-33b-instruct.Q8_0.gguf",
-      checksum:
-        "86529f8eefc87a80bd20d62229ee5acdc32d5773be8575a143bc491924865c21",
+        "ec11bacb9e0b8c8e0f483f209c487939202b04bbf4f815f0a0945c5b256da895",
     },
   };
 
