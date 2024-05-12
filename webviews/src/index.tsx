@@ -25,6 +25,7 @@ const router = createMemoryRouter(
           element: <RequireInit />,
           children: [
             {
+              path: "/chats/history",
               element: <ChatsHistory />,
               loader: ChatsHistoryLoader,
             },

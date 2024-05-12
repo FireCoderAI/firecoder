@@ -17,7 +17,7 @@ const modelsBase = {
 };
 export type TypeModelsBase = keyof typeof modelsBase;
 
-const modelsChat = {
+export const modelsChat = {
   "chat-small": {
     port: 39725,
   },
@@ -197,7 +197,7 @@ class Server {
     });
 
     const isServerStarted = await this.checkServerStatusIntervalWithTimeout(
-      1000000
+      20000
     );
 
     if (!isServerStarted) {
@@ -217,7 +217,7 @@ class Server {
     return true;
   }
 
-  public async stopServer() {
+  public stopServer() {
     if (this.serverProcess) {
       const result = this.serverProcess.kill(9);
       if (result === false) {

@@ -30,7 +30,10 @@ export const ChatInstance = () => {
   return (
     <div className={styles.chatRoot}>
       <div className={styles.chatBlockNavigation}>
-        <VSCodeButton appearance="icon" onClick={() => navigate("/chats")}>
+        <VSCodeButton
+          appearance="icon"
+          onClick={() => navigate("/chats/history")}
+        >
           <span className={"codicon codicon-arrow-left"}></span>
         </VSCodeButton>
       </div>

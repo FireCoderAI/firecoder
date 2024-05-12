@@ -16,7 +16,7 @@ export const getSuppabaseClient = () => {
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: false,
-        debug: true,
+        // debug: true,
         storage: secretsStorage,
       },
     });

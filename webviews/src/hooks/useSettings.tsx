@@ -3,6 +3,7 @@ import { vscode } from "../utilities/vscode";
 
 type ConfigurationType = {
   chatEnabled: boolean;
+  userLoggined: boolean;
 };
 
 interface SettingsContextType {
@@ -19,16 +20,35 @@ export const SettingsProvider = ({
   const [configuration, setConfiguration] = useState<ConfigurationType>(null!);
 
   useEffect(() => {
+    let lastSettings: any = null;
+
     const getSettings = async () => {
       const settings = await vscode.getSettings();
-      setConfiguration({
-        chatEnabled: settings.chatEnable,
-      });
+      if (
+        settings.chatEnabled !== lastSettings?.chatEnabled ||
+        settings.userLoggined !== lastSettings?.userLoggined
+      ) {
+        lastSettings = settings;
+
+        setConfiguration({
+          chatEnabled: settings.chatEnabled,
+          userLoggined: settings.userLoggined,
+        });
+      }
     };
     getSettings();
+
+    const interval = setInterval(getSettings, 5000);
+    return () => {
+      clearInterval(interval);
+    };
   }, []);
 
   const value = useMemo(() => ({ configuration }), [configuration]);
+
+  if (configuration === null) {
+    return null;
+  }
 
   return (
     <SettingsContext.Provider value={value}>

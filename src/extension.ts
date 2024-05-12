@@ -70,18 +70,13 @@ export async function activate(context: vscode.ExtensionContext) {
   vscode.workspace.onDidChangeConfiguration(async (event) => {
     if (event.affectsConfiguration("firecoder.cloud.use")) {
       const cloudUse = configuration.get("cloud.use");
+      const supabase = getSuppabaseClient();
       if (cloudUse === true) {
-        const supabase = getSuppabaseClient();
-
         const data = await supabase.auth.getUser();
         if (data.error) {
           await login();
           return;
         }
-      } else {
-        const supabase = getSuppabaseClient();
-
-        await supabase.auth.signOut();
       }
     }
   });
@@ -94,9 +89,99 @@ export async function activate(context: vscode.ExtensionContext) {
     })
   );
 
+  const startChat = async () => {
+    if (configuration.get("cloud.use") && configuration.get("cloud.chat.use")) {
+      Logger.info("Use cloud for chat.", {
+        component: "main",
+        sendTelemetry: true,
+      });
+    } else if (configuration.get("experimental.chat")) {
+      Logger.info("Use local for chat.", {
+        component: "main",
+        sendTelemetry: true,
+      });
+      try {
+        await servers["chat-medium"].startServer();
+      } catch (error) {
+        vscode.window.showErrorMessage((error as Error).message);
+        Logger.error(error, {
+          component: "server",
+          sendTelemetry: true,
+        });
+      }
+      Logger.info("Chat is ready to start.", {
+        component: "main",
+        sendTelemetry: true,
+      });
+    } else {
+      Logger.info("Chat is not enable", {
+        component: "main",
+        sendTelemetry: true,
+      });
+    }
+  };
+
+  const startCompletion = async (registerCompletionProvider: boolean) => {
+    if (
+      configuration.get("cloud.use") &&
+      configuration.get("cloud.autocomplete.use")
+    ) {
+      Logger.info("Use cloud for auto completions.", {
+        component: "main",
+        sendTelemetry: true,
+      });
+    } else {
+      Logger.info("Use local for auto completions.", {
+        component: "main",
+        sendTelemetry: true,
+      });
+      try {
+        const serversStarted = await Promise.all(
+          [
+            ...new Set([
+              configuration.get("completion.autoMode"),
+              configuration.get("completion.manuallyMode"),
+            ]),
+          ].map((serverType) => servers[serverType].startServer())
+        );
+
+        if (serversStarted.some((serverStarted) => serverStarted)) {
+          Logger.info("Servers inited", {
+            component: "main",
+            sendTelemetry: true,
+          });
+        }
+      } catch (error) {
+        vscode.window.showErrorMessage((error as Error).message);
+        Logger.error(error, {
+          component: "server",
+          sendTelemetry: true,
+        });
+      }
+    }
+    if (registerCompletionProvider) {
+      const InlineCompletionProvider = getInlineCompletionProvider(context);
+      vscode.languages.registerInlineCompletionItemProvider(
+        { pattern: "**" },
+        InlineCompletionProvider
+      );
+    }
+  };
+
+  (async () => {
+    await Promise.all([startChat(), startCompletion(true)]);
+
+    Logger.info("FireCoder is ready.", {
+      component: "main",
+      sendTelemetry: true,
+    });
+  })();
+
   vscode.workspace.onDidChangeConfiguration(async (event) => {
     if (
       event.affectsConfiguration("firecoder.cloud.use") ||
+      event.affectsConfiguration("firecoder.cloud.chat.use") ||
+      event.affectsConfiguration("firecoder.cloud.autocomplete.use") ||
       event.affectsConfiguration("firecoder.experimental.chat") ||
       event.affectsConfiguration("firecoder.completion.manuallyMode") ||
       event.affectsConfiguration("firecoder.completion.autoMode") ||
@@ -107,89 +192,12 @@ export async function activate(context: vscode.ExtensionContext) {
       event.affectsConfiguration(
         "firecoder.experimental.useGpu.windows.nvidia"
       ) ||
-      event.affectsConfiguration("firecoder.server.usePreRelease") ||
-      event.affectsConfiguration("firecoder.cloud.use.chat") ||
-      event.affectsConfiguration("firecoder.cloud.use.autocomplete")
+      event.affectsConfiguration("firecoder.server.usePreRelease")
     ) {
       Object.values(servers).forEach((server) => server.stopServer());
-
-      const completionServers =
-        configuration.get("cloud.use") &&
-        configuration.get("cloud.autocomplete.use")
-          ? []
-          : new Set([
-              configuration.get("completion.autoMode"),
-              configuration.get("completion.manuallyMode"),
-            ]);
-      const serversToStart = [
-        ...completionServers,
-        ...(configuration.get("experimental.chat") &&
-        configuration.get("cloud.use") &&
-        configuration.get("cloud.chat.use")
-          ? []
-          : ["chat-medium" as const]),
-      ];
-      await Promise.all(
-        serversToStart.map((serverType) => servers[serverType].startServer())
-      );
+      await Promise.all([startChat(), startCompletion(false)]);
     }
   });
-
-  (async () => {
-    if (configuration.get("cloud.use")) {
-      Logger.info("Use cloud for chat and completions", {
-        component: "main",
-        sendTelemetry: true,
-      });
-
-      const InlineCompletionProvider = getInlineCompletionProvider(context);
-      vscode.languages.registerInlineCompletionItemProvider(
-        { pattern: "**" },
-        InlineCompletionProvider
-      );
-    } else {
-      try {
-        const completionServers = configuration.get("cloud.use")
-          ? []
-          : new Set([
-              configuration.get("completion.autoMode"),
-              configuration.get("completion.manuallyMode"),
-            ]);
-        const serversStarted = await Promise.all(
-          [
-            ...completionServers,
-            ...(configuration.get("experimental.chat") &&
-            !configuration.get("cloud.use")
-              ? ["chat-medium" as const]
-              : []),
-          ].map((serverType) => servers[serverType].startServer())
-        );
-
-        if (serversStarted.some((serverStarted) => serverStarted)) {
-          Logger.info("Server inited", {
-            component: "main",
-            sendTelemetry: true,
-          });
-          const InlineCompletionProvider = getInlineCompletionProvider(context);
-          vscode.languages.registerInlineCompletionItemProvider(
-            { pattern: "**" },
-            InlineCompletionProvider
-          );
-        }
-      } catch (error) {
-        vscode.window.showErrorMessage((error as Error).message);
-        Logger.error(error, {
-          component: "server",
-          sendTelemetry: true,
-        });
-      }
-    }
-
-    Logger.info("FireCoder is ready.", {
-      component: "main",
-      sendTelemetry: true,
-    });
-  })();
 }
 
 export function deactivate() {

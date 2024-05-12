@@ -87,11 +87,6 @@ interface ConfigurationPropertiesType
 }
 
 class Configuration {
-  // private configuration: vscode.WorkspaceConfiguration;
-  // constructor() {
-  //   this.configuration = vscode.workspace.getConfiguration("firecoder");
-  // }
-
   public get<T extends keyof ConfigurationPropertiesType>(
     property: T
   ): ConfigurationPropertiesType[T]["possibleValues"] {
@@ -99,6 +94,14 @@ class Configuration {
     const value = configuration.get(property) as any;
 
     return value ?? ConfigurationProperties[property]["default"];
+  }
+
+  public async set<T extends keyof ConfigurationPropertiesType>(
+    property: T,
+    value: ConfigurationPropertiesType[T]["possibleValues"]
+  ) {
+    const configuration = vscode.workspace.getConfiguration("firecoder");
+    await configuration.update(property, value, true);
   }
 }
 
