@@ -120,7 +120,6 @@ class Server {
         ...(isMacArm64 ? ["--nobrowser"] : []),
         ...(useGPU ? ["--n-gpu-layers", "100"] : []),
         "--cont-batching",
-        "--embedding",
         "--slots-endpoint-disable",
         "--log-disable",
       ],
@@ -238,7 +237,7 @@ class Server {
           return true;
         }
         const resJson = (await res.json()) as { status: string };
-        if (resJson.status === "ok") {
+        if (resJson.status === "ok" || resJson.status === "no slot available") {
           this.status = "started";
           return true;
         }
