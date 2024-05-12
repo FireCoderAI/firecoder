@@ -1,5 +1,4 @@
 import { useLoaderData, useNavigate } from "react-router-dom";
-import { Chat } from "../../hooks/useChat";
 import { vscode } from "../../utilities/vscode";
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import styles from "./style.module.css";
@@ -9,8 +8,10 @@ export async function loader() {
   return chats;
 }
 
+type LoaderReturn = Awaited<ReturnType<typeof loader>>;
+
 const ChatsHistory = () => {
-  const chats = useLoaderData() as Chat[];
+  const chats = useLoaderData() as LoaderReturn;
 
   const navigate = useNavigate();
 

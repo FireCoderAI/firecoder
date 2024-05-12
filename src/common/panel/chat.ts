@@ -5,6 +5,9 @@ import { getNonce } from "../utils/getNonce";
 import { chat } from "../chat";
 import { Chat, ChatMessage } from "../prompt/promptChat";
 import { state } from "../utils/state";
+import { configuration } from "../utils/configuration";
+import { TypeModelsChat, modelsChat, servers } from "../server";
+import { getSuppabaseClient } from "../auth/supabaseClient";
 
 export type MessageType =
   | {
@@ -28,6 +31,12 @@ type MessageToExtention =
   | {
       type: "abort-generate";
       id: string;
+    }
+  | {
+      type: "get-settings";
+    }
+  | {
+      type: "enable-chat";
     }
   | {
       type: "get-chat";
@@ -173,6 +182,16 @@ export class ChatPanel implements vscode.WebviewViewProvider {
               id: message.id,
             });
             break;
+          case "get-settings":
+            await this.handleGetSettings({
+              id: message.id,
+            });
+            break;
+          case "enable-chat":
+            await this.handleEnableChat({
+              id: message.id,
+            });
+            break;
           default:
             break;
         }
@@ -211,6 +230,40 @@ export class ChatPanel implements vscode.WebviewViewProvider {
     }
 
     sendResponse("", true);
+  }
+
+  private async handleGetSettings({ id }: { id: string }) {
+    const settigns = await this.getSettings();
+
+    await this.postMessage({
+      type: "e2w-response",
+      id: id,
+      data: settigns,
+      done: true,
+    });
+  }
+
+  private async getSettings() {
+    const cloudUsing = configuration.get("cloud.use");
+    const cloudChatUsing = configuration.get("cloud.chat.use");
+    const chatServerIsWorking = Object.keys(modelsChat)
+      .map(
+        (chatModel) => servers[chatModel as TypeModelsChat].status === "started"
+      )
+      .some((serverIsWorking) => serverIsWorking);
+
+    const localChatUsing = configuration.get("experimental.chat");
+    const supabase = getSuppabaseClient();
+    const sesssion = await supabase.auth.getSession();
+    const userLoggined = sesssion.data.session ? true : false;
+
+    const chatEnabled =
+      (localChatUsing && chatServerIsWorking) || (cloudUsing && cloudChatUsing);
+
+    return {
+      chatEnabled: chatEnabled,
+      userLoggined: userLoggined,
+    };
   }
 
   private async handleGetChat({ chatId, id }: { chatId: string; id: string }) {
@@ -270,7 +323,17 @@ export class ChatPanel implements vscode.WebviewViewProvider {
     await this.postMessage({
       type: "e2w-response",
       id: id,
-      data: "",
+      data: true,
+      done: true,
+    });
+  }
+
+  private async handleEnableChat({ id }: { id: string }) {
+    await configuration.set("experimental.chat", true);
+    await this.postMessage({
+      type: "e2w-response",
+      id: id,
+      data: true,
       done: true,
     });
   }
