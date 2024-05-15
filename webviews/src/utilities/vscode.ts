@@ -17,7 +17,7 @@ export type MessageType =
       data: any;
     };
 
-type MessageToExtention =
+type MessageToExtension =
   | {
       type: "send-message";
       data: ChatMessage[];
@@ -96,7 +96,7 @@ class VSCodeAPIWrapper {
   }
 
   public postMessageCallback(
-    message: MessageToExtention,
+    message: MessageToExtension,
     messageCallback?: (message: any) => void,
     config?: { signal?: AbortSignal }
   ) {
