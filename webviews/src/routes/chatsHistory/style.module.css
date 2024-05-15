@@ -17,3 +17,8 @@
   align-items: center;
   padding: 16px;
 }
+
+.chatHistoryChatButtons {
+  display: flex;
+  flex-direction: column;
+}

@@ -32,12 +32,23 @@ const ChatsHistory = () => {
         {chats.reverse().map((chat) => (
           <div className={styles.chatHistoryChat} key={chat.chatId}>
             <h4>{chat.title}</h4>
-            <VSCodeButton
-              appearance="secondary"
-              onClick={() => navigate(`/chats/${chat.chatId}`)}
-            >
-              Open Chat
-            </VSCodeButton>
+            <div className={styles.chatHistoryChatButtons}>
+              <VSCodeButton
+                appearance="secondary"
+                onClick={() => navigate(`/chats/${chat.chatId}`)}
+              >
+                Open Chat
+              </VSCodeButton>
+              <p>
+                {new Date(chat.date).toLocaleString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                  hour: "numeric",
+                  minute: "numeric",
+                  second: "numeric",
+                })}
+              </p>
+            </div>
           </div>
         ))}
       </div>
