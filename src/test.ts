@@ -1,49 +1,87 @@
-import { HuggingFaceTransformersEmbeddingsLocal } from "./hft";
-import { DirectoryLoader } from "langchain/document_loaders/fs/directory";
-import { TextLoader } from "langchain/document_loaders/fs/text";
+import * as vscode from "vscode";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { readFileSync } from "node:fs";
+import { FileVectorStore, VSCodeDirectoryLoader } from "./common/embedding";
+import { index } from "langchain/indexes";
+import { InMemoryRecordManager } from "@langchain/community/indexes/memory";
+import { state } from "./common/utils/state";
+
+const embedding = new OpenAIEmbeddings({
+  apiKey: "YOUR-API-KEY",
+  batchSize: 64,
+  maxConcurrency: 10,
+  configuration: {
+    baseURL: "http://localhost:39729/v1",
+  },
+});
 
 export const startTest = async () => {
-  const loader = new DirectoryLoader(
-    "/home/gespispace/helper/helper-coder/src",
-    {
-      ".ts": (path) => new TextLoader(path),
-    }
-  );
+  const workspacePath = vscode.workspace.workspaceFolders![0].uri;
+
+  const loader = new VSCodeDirectoryLoader(workspacePath);
 
   const docs = await loader.load();
 
   const splitter = RecursiveCharacterTextSplitter.fromLanguage("js", {
-    chunkSize: 4000,
+    chunkSize: 7000,
     chunkOverlap: 0,
   });
-  const jsOutput = await splitter.splitDocuments(docs);
-  const vectorStore = await MemoryVectorStore.fromDocuments(
-    jsOutput,
-    new HuggingFaceTransformersEmbeddingsLocal({
-      // modelName: "jinaai/jina-embeddings-v2-base-code",
-      modelName: "Xenova/bge-m3",
-      maxConcurrency: 1,
+
+  const jsOutput = await splitter.splitDocuments(
+    docs.map((doc) => ({
+      ...doc,
+      pageContent: "search_document: " + doc.pageContent,
+    }))
+  );
+
+  const savedVectorStore = state.workspace.get("embedding");
+  const vectorStore = savedVectorStore
+    ? FileVectorStore.deserialize(savedVectorStore, embedding)
+    : new FileVectorStore(embedding);
+
+  const recordManager = new InMemoryRecordManager();
+  const recordManagerStateExist = state.workspace.get("recordManager");
+
+  if (recordManagerStateExist) {
+    recordManager.records = new Map(
+      Object.entries(JSON.parse(recordManagerStateExist))
+    );
+  }
+
+  console.log(
+    await index({
+      docsSource: jsOutput,
+      recordManager,
+      vectorStore,
+      options: {
+        cleanup: "full",
+        sourceIdKey: (doc) => doc.metadata.source,
+      },
     })
   );
 
+  state.workspace.update("embedding", vectorStore.serialize());
+  const recordManagerState = JSON.stringify(
+    Object.fromEntries(recordManager.records)
+  );
+
+  state.workspace.update("recordManager", recordManagerState);
+
+  const file = readFileSync(
+    "/home/gespispace/firecoder/llm-backend/src/completions/completions.module.ts",
+    { encoding: "utf-8" }
+  );
+
+  const start = performance.now();
   const resultOne = await vectorStore.similaritySearchWithScore(
-    "what properties do we send with each events to telemetry?",
+    `search_document: ${file}`,
     20
   );
-  console.log(resultOne);
-  // const model = new HuggingFaceTransformersEmbeddingsLocal({
-  //   // modelName: "jinaai/jina-embeddings-v2-base-code",
-  //   modelName: "Xenova/bge-m3",
-  // });
+  const end = performance.now();
 
-  // /* Embed queries */
-  // const res = await model.embedQuery(
-  //   "What would be a good company name for a company that makes colorful socks?"
-  // );
-  // console.log({ res });
-  // /* Embed documents */
-  // const documentRes = await model.embedDocuments(["Hello world", "Bye bye"]);
-  // console.log({ documentRes });
+  console.log(`Full Time: ${(end - start).toFixed(2)}ms`);
+  console.log(
+    resultOne.map((document) => [document[1], document[0].metadata.source])
+  );
 };

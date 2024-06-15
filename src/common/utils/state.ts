@@ -5,10 +5,14 @@ import { Chat } from "../prompt/promptChat";
 const StateValues = {
   inlineSuggestModeAuto: true,
   serverSpec: null,
+  embedding: null,
+  recordManager: null,
 };
 type StateValuesType = {
   inlineSuggestModeAuto: boolean;
   serverSpec: Spec | null;
+  embedding: string | null;
+  recordManager: string | null;
   [key: `chat-${string}`]: Chat | undefined;
 };
 
