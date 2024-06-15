@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import path from "node:path";
 import Logger from "../logger";
 import { tokenizer } from "./tokenizer";
+import { embeddings } from "../embedding/embedding";
 
 const tokenize = async (text: string): Promise<number> => {
   try {
@@ -176,6 +177,10 @@ export const getPromptCompletion = async ({
 
   let additionalDocumentsText = "";
 
+  const documentsFromEmbeddings = await embeddings.getRelativeDocuments(
+    activeDocument
+  );
+
   if (
     additionalDocuments.length !== 0 &&
     maxToken - activeDocumentTokens > 100
@@ -219,6 +224,6 @@ export const getPromptCompletion = async ({
 
   Logger.debug(`Full Time: ${(end - start).toFixed(2)}ms`);
   const prompt = `${additionalDocumentsText}${activeDocumentFileName}${activeDocumentText}<|fim_middle|>`;
-
+  console.log(prompt);
   return prompt;
 };

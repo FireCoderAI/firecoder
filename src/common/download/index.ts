@@ -169,6 +169,11 @@ const getModelInfo = async (
       checksum:
         "ec11bacb9e0b8c8e0f483f209c487939202b04bbf4f815f0a0945c5b256da895",
     },
+    "embed-small": {
+      url: "https://huggingface.co/nomic-ai/nomic-embed-text-v1.5-GGUF/resolve/main/nomic-embed-text-v1.5.f16.gguf",
+      checksum:
+        "f7af6f66802f4df86eda10fe9bbcfc75c39562bed48ef6ace719a251cf1c2fdb",
+    },
   };
 
   return models[typeModel];

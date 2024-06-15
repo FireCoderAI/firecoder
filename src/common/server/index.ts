@@ -25,9 +25,18 @@ export const modelsChat = {
 
 export type TypeModelsChat = keyof typeof modelsChat;
 
+export const modelsEmbed = {
+  "embed-small": {
+    port: 39729,
+  },
+};
+
+export type ModelsEmbed = keyof typeof modelsEmbed;
+
 const models = {
   ...modelsBase,
   ...modelsChat,
+  ...modelsEmbed,
 };
 
 export type TypeModel = keyof typeof models;
@@ -106,6 +115,7 @@ class Server {
 
     const isChatModel = this.typeModel in modelsChat;
     const isBaseModel = this.typeModel in modelsBase;
+    const isEmbedModel = this.typeModel in modelsEmbed;
 
     this.serverProcess = spawn(
       serverPath,
@@ -119,6 +129,23 @@ class Server {
         ...(isBaseModel ? ["--parallel", "4"] : []),
         ...(isMacArm64 ? ["--nobrowser"] : []),
         ...(useGPU ? ["--n-gpu-layers", "100"] : []),
+        ...(isEmbedModel
+          ? [
+              "--ctx-size",
+              "8192",
+              "-b",
+              "8192",
+              "--rope-scaling",
+              "yarn",
+              "--rope-freq-scale",
+              "0.25",
+              "--ubatch-size",
+              "8192",
+              // "--rope-freq-base",
+              // ""
+              "--embeddings",
+            ]
+          : []),
         "--cont-batching",
         "--slots-endpoint-disable",
         "--log-disable",
@@ -305,4 +332,5 @@ export const servers = {
   "base-small": new Server("base-small"),
   "base-medium": new Server("base-medium"),
   "chat-medium": new Server("chat-medium"),
+  "embed-small": new Server("embed-small"),
 };

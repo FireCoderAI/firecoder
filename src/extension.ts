@@ -11,6 +11,8 @@ import { tokenizer } from "./common/prompt/tokenizer";
 import { login } from "./common/auth";
 import { secretsStorage } from "./common/utils/secretStore";
 import { getSuppabaseClient } from "./common/auth/supabaseClient";
+import { startTest } from "./test";
+import { embeddings } from "./common/embedding/embedding";
 
 export async function activate(context: vscode.ExtensionContext) {
   FirecoderTelemetrySenderInstance.init(context);
@@ -18,6 +20,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
   state.global.init(context.globalState);
   state.workspace.init(context.workspaceState);
+
+  embeddings.init(vscode.workspace.workspaceFolders![0].uri);
 
   secretsStorage.init(context.secrets);
 
@@ -40,6 +44,22 @@ export async function activate(context: vscode.ExtensionContext) {
 
   statusBar.init(context);
   await tokenizer.init();
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("firecoder.testEmbed", async () => {
+      startTest();
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "firecoder.clearLocalEmbeddings",
+      async () => {
+        state.workspace.update("embedding", null);
+        state.workspace.update("recordManager", null);
+      }
+    )
+  );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
@@ -168,8 +188,27 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   };
 
+  const startEmbed = async () => {
+    // if (configuration.get("experimental.useEmbeddings")) {
+    try {
+      Logger.info("Use local for embed.", {
+        component: "main",
+        sendTelemetry: true,
+      });
+      await servers["embed-small"].startServer();
+      // embeddings.refreshIndex();
+    } catch (error) {
+      vscode.window.showErrorMessage((error as Error).message);
+      Logger.error(error, {
+        component: "server",
+        sendTelemetry: true,
+      });
+    }
+    // }
+  };
+
   (async () => {
-    await Promise.all([startChat(), startCompletion(true)]);
+    await Promise.all([startChat(), startCompletion(true), startEmbed()]);
 
     Logger.info("FireCoder is ready.", {
       component: "main",
@@ -195,7 +234,7 @@ export async function activate(context: vscode.ExtensionContext) {
       event.affectsConfiguration("firecoder.server.usePreRelease")
     ) {
       Object.values(servers).forEach((server) => server.stopServer());
-      await Promise.all([startChat(), startCompletion(false)]);
+      await Promise.all([startChat(), startCompletion(false), startEmbed()]);
     }
   });
 }
